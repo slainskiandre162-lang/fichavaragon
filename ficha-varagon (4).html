@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Varagon — Ficha do Aventureiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   VARAGON — DESIGN TOKENS
+   ========================================================= */
+:root{
+  --void:#151009;
+  --void-2:#1b140c;
+  --leather:#2c2015;
+  --leather-2:#38291a;
+  --leather-edge:#4a3620;
+  --parchment:#ecdfba;
+  --parchment-2:#e2d2a5;
+  --parchment-dim:#cdbb8d;
+  --ink:#2a1d10;
+  --ink-soft:#4a3a24;
+  --gold:#c8992e;
+  --gold-bright:#f0c05a;
+  --gold-dim:#8a6a2a;
+  --steel:#8993a1;
+  --steel-dim:#5c6470;
+  --blood:#9a2f2a;
+  --blood-bright:#d1483f;
+  --forest:#4f6b45;
+  --forest-bright:#79a267;
+  --arcane:#5b6fa8;
+  --shadow:rgba(0,0,0,.55);
+  --radius:10px;
+  --radius-sm:6px;
+  --font-display:'Cinzel', serif;
+  --font-deco:'Cinzel Decorative', serif;
+  --font-body:'EB Garamond', serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse at top left, rgba(200,153,46,.06), transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(90,60,20,.10), transparent 55%),
+    var(--void);
+  color:var(--parchment);
+  font-family:var(--font-body);
+  font-size:16px;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4,.display{font-family:var(--font-display); letter-spacing:.03em;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--void-2);}
+::-webkit-scrollbar-thumb{background:var(--leather-edge); border-radius:6px;}
+a{color:var(--gold-bright);}
+button{font-family:var(--font-body); cursor:pointer;}
+input,select,textarea{font-family:var(--font-body); color:var(--ink); background:var(--parchment); border:1px solid var(--leather-edge); border-radius:var(--radius-sm); padding:6px 8px; font-size:15px;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold-bright); outline-offset:1px;}
+textarea{resize:vertical; font-family:var(--font-body);}
+label{display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--parchment-dim); margin-bottom:3px;}
+.field{margin-bottom:10px;}
+.row{display:flex; gap:10px; flex-wrap:wrap;}
+.row>.field{flex:1; min-width:120px;}
+.grid{display:grid; gap:12px;}
+.card{
+  background:linear-gradient(160deg, var(--leather-2), var(--leather));
+  border:1px solid var(--leather-edge);
+  border-radius:var(--radius);
+  box-shadow:0 4px 14px var(--shadow), inset 0 1px 0 rgba(255,255,255,.03);
+  padding:16px;
+}
+.card h3{margin:0 0 10px; font-size:1.05rem; color:var(--gold-bright); display:flex; align-items:center; gap:8px;}
+.btn{
+  background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color:var(--ink); border:1px solid var(--gold-dim); border-radius:var(--radius-sm);
+  padding:8px 14px; font-weight:600; letter-spacing:.02em; box-shadow:0 2px 0 var(--gold-dim);
+  transition:transform .08s ease;
+}
+.btn:active{transform:translateY(1px); box-shadow:0 1px 0 var(--gold-dim);}
+.btn.secondary{background:linear-gradient(180deg,#4a5462,#333c47); color:var(--parchment); border-color:#20262d; box-shadow:0 2px 0 #20262d;}
+.btn.danger{background:linear-gradient(180deg, var(--blood-bright), var(--blood)); color:#fff0ee; border-color:#5e1a17; box-shadow:0 2px 0 #5e1a17;}
+.btn.ghost{background:transparent; border:1px solid var(--leather-edge); color:var(--parchment-dim); box-shadow:none;}
+.btn.small{padding:4px 9px; font-size:.82rem;}
+.pill{display:inline-flex; align-items:center; gap:4px; background:var(--void-2); border:1px solid var(--leather-edge); border-radius:999px; padding:3px 10px; font-size:.78rem; color:var(--parchment-dim);}
+.hidden{display:none !important;}
+.muted{color:var(--parchment-dim);}
+.icon{width:1em; height:1em; display:inline-block; vertical-align:-.15em;}
+
+/* ============ APP SHELL ============ */
+#app{display:flex; min-height:100vh;}
+
+/* --- Sidebar (desktop) --- */
+#sidebar{
+  width:230px; flex-shrink:0;
+  background:linear-gradient(180deg, var(--leather-2), var(--void-2) 90%);
+  border-right:2px solid var(--leather-edge);
+  display:flex; flex-direction:column;
+  position:sticky; top:0; height:100vh; z-index:40;
+}
+#sidebar .brand{
+  padding:18px 16px 14px; text-align:center;
+  border-bottom:1px solid var(--leather-edge);
+  background:radial-gradient(ellipse at top, rgba(200,153,46,.12), transparent 70%);
+}
+#sidebar .brand .title{font-family:var(--font-deco); font-size:1.5rem; color:var(--gold-bright); text-shadow:0 2px 6px rgba(0,0,0,.6);}
+#sidebar .brand .sub{font-size:.7rem; letter-spacing:.2em; color:var(--parchment-dim); text-transform:uppercase; margin-top:2px;}
+#tabnav{list-style:none; margin:0; padding:8px; overflow-y:auto; flex:1;}
+#tabnav li{margin-bottom:2px;}
+#tabnav button{
+  width:100%; text-align:left; background:transparent; border:1px solid transparent; color:var(--parchment-dim);
+  padding:9px 12px; border-radius:var(--radius-sm); font-size:.92rem; display:flex; align-items:center; gap:10px;
+  transition:background .12s, color .12s;
+}
+#tabnav button .ic{font-size:1.05rem; width:1.3em; text-align:center;}
+#tabnav button:hover{background:rgba(200,153,46,.08); color:var(--parchment);}
+#tabnav button.active{background:linear-gradient(90deg, rgba(200,153,46,.22), rgba(200,153,46,.04)); color:var(--gold-bright); border-color:var(--gold-dim); font-weight:600;}
+#sidebar .foot{padding:10px; border-top:1px solid var(--leather-edge); font-size:.72rem; color:var(--parchment-dim); text-align:center;}
+
+/* --- Main column --- */
+#main{flex:1; min-width:0; display:flex; flex-direction:column;}
+
+/* --- Top bar --- */
+#topbar{
+  position:sticky; top:0; z-index:30;
+  background:linear-gradient(180deg, var(--leather-2), var(--leather));
+  border-bottom:2px solid var(--leather-edge);
+  padding:10px 16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  box-shadow:0 4px 12px var(--shadow);
+}
+#topbar .portrait{
+  width:46px; height:46px; border-radius:50%; border:2px solid var(--gold); background:var(--void-2) center/cover no-repeat;
+  display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:var(--gold-dim); flex-shrink:0;
+}
+#topbar .idblock{min-width:0;}
+#topbar .idblock .nm{font-family:var(--font-display); font-size:1.05rem; color:var(--gold-bright); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:38vw;}
+#topbar .idblock .meta{font-size:.76rem; color:var(--parchment-dim);}
+#topbar .vitals{display:flex; gap:14px; flex-wrap:wrap; margin-left:auto; align-items:center;}
+#topbar .vit{font-family:var(--font-mono); font-size:.82rem; text-align:center; min-width:56px;}
+#topbar .vit .lbl{display:block; font-family:var(--font-body); font-size:.62rem; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:.08em;}
+#topbar .vit .val{font-size:1rem; color:var(--parchment);}
+#topbar .icons{display:flex; gap:6px;}
+#topbar .icons button{background:var(--void-2); border:1px solid var(--leather-edge); color:var(--parchment-dim); border-radius:var(--radius-sm); width:34px; height:34px; font-size:1rem;}
+#topbar .icons button:hover{color:var(--gold-bright); border-color:var(--gold-dim);}
+#saveIndicator{font-size:.7rem; color:var(--forest-bright); display:flex; align-items:center; gap:5px; white-space:nowrap;}
+#saveIndicator .dot{width:7px; height:7px; border-radius:50%; background:var(--forest-bright); box-shadow:0 0 6px var(--forest-bright);}
+#saveIndicator.saving .dot{background:var(--gold-bright); box-shadow:0 0 6px var(--gold-bright);}
+
+/* --- Resource bars panel --- */
+#resourcePanel{padding:12px 16px; display:flex; flex-wrap:wrap; align-items:flex-start; gap:12px; background:var(--void-2); border-bottom:1px solid var(--leather-edge);}
+.bar-wrap{
+  position:relative; isolation:isolate; z-index:1;
+  font-size:.72rem; flex:1 1 168px; min-width:150px; max-width:260px; min-height:52px;
+  background:linear-gradient(160deg, var(--leather-2), var(--leather));
+  border:1px solid var(--leather-edge); border-radius:var(--radius-sm);
+  padding:7px 9px; box-shadow:0 2px 6px rgba(0,0,0,.35);
+}
+.bar-wrap.pip-wrap{flex-basis:220px; min-height:auto;}
+.bar-wrap .bl{display:flex; justify-content:space-between; gap:6px; color:var(--parchment); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em; font-weight:600;}
+.bar-wrap .bl span:first-child{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bar-wrap .bl span:last-child{flex-shrink:0; font-family:var(--font-mono); color:var(--gold-bright); letter-spacing:0; text-transform:none; font-weight:700;}
+.bar-line{display:flex; align-items:center; gap:6px;}
+.bar-step{
+  flex-shrink:0; width:20px; height:20px; line-height:1; border-radius:50%;
+  background:var(--void-2); border:1px solid var(--leather-edge); color:var(--parchment-dim);
+  font-size:.9rem; display:flex; align-items:center; justify-content:center; padding:0;
+}
+.bar-step:hover{color:var(--gold-bright); border-color:var(--gold-dim);}
+.bar-step:active{transform:scale(.92);}
+.bar-track{flex:1; height:12px; background:#0b0805; border-radius:6px; overflow:hidden; border:1px solid var(--leather-edge); cursor:pointer; position:relative;}
+.bar-fill{height:100%; border-radius:6px; transition:width .5s cubic-bezier(.4,0,.2,1); position:relative;}
+.bar-fill.hp{background:linear-gradient(90deg, #8f2a24, #ef5d4e); box-shadow:0 0 8px rgba(239,93,78,.5) inset;}
+.bar-fill.temp{background:linear-gradient(90deg, #2f6fc4, #6fb3ff); box-shadow:0 0 8px rgba(111,179,255,.5) inset;}
+.bar-fill.armor{background:linear-gradient(90deg, #7c8794, #c6d0db); box-shadow:0 0 8px rgba(198,208,219,.4) inset;}
+.bar-fill.reaction{background:linear-gradient(90deg, var(--gold-dim), var(--gold-bright)); box-shadow:0 0 8px rgba(240,192,90,.5) inset;}
+.bar-fill.hitdice{background:linear-gradient(90deg, #34572c, #86c26f); box-shadow:0 0 8px rgba(134,194,111,.45) inset;}
+.bar-fill.pulse-down{animation:pulseDown .4s ease;}
+.bar-fill.pulse-up{animation:pulseUp .4s ease;}
+@keyframes pulseDown{0%{filter:brightness(2.2);}100%{filter:brightness(1);}}
+@keyframes pulseUp{0%{filter:brightness(2.2) saturate(1.6);}100%{filter:brightness(1);}}
+
+/* Spell-slot pips (manual, per level) */
+.pip-row{display:flex; flex-wrap:wrap; gap:5px;}
+.pip{
+  width:18px; height:18px; border-radius:50%; flex-shrink:0; cursor:pointer;
+  border:1.5px solid #b088ff; background:radial-gradient(circle at 35% 30%, #cbb2ff, #8a5cf0 70%);
+  box-shadow:0 0 6px rgba(150,110,255,.55); transition:transform .12s ease, background .15s ease, opacity .15s ease;
+}
+.pip:hover{transform:scale(1.15);}
+.pip.spent{background:#241c33; border-color:#4a3d63; box-shadow:none; opacity:.55;}
+.pip-row-label{font-size:.68rem; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; display:flex; justify-content:space-between;}
+.pip-row-label span:last-child{color:var(--gold-bright); font-family:var(--font-mono); text-transform:none;}
+
+/* --- Content --- */
+#content{padding:18px 20px 90px; flex:1;}
+.tab-panel{animation:fadeIn .22s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+.section-title{font-family:var(--font-display); color:var(--gold-bright); font-size:1.3rem; margin:0 0 4px; display:flex; align-items:center; gap:10px;}
+.section-sub{color:var(--parchment-dim); font-size:.85rem; margin-bottom:16px;}
+
+/* Attribute cards */
+.attr-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:14px;}
+.attr-card{text-align:center; position:relative;}
+.attr-card .aname{font-family:var(--font-display); letter-spacing:.1em; font-size:.85rem; color:var(--parchment-dim); text-transform:uppercase;}
+.attr-card .amod{font-family:var(--font-mono); font-size:2.6rem; color:var(--gold-bright); line-height:1.1; margin:4px 0;}
+.attr-card .atotal{font-size:.8rem; color:var(--parchment-dim); margin-bottom:8px;}
+.attr-card .ainputs{display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; text-align:left;}
+.attr-card input{width:100%; text-align:center;}
+.roll-btn{width:100%; margin-top:8px;}
+
+/* Skills / saves list */
+.skill-row{display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:var(--radius-sm); border-bottom:1px solid rgba(255,255,255,.04);}
+.skill-row:hover{background:rgba(200,153,46,.06);}
+.skill-row .prof-dot{width:15px; height:15px; border-radius:50%; border:2px solid var(--steel); background:transparent; flex-shrink:0; cursor:pointer; box-shadow:0 0 0 1px rgba(0,0,0,.4);}
+.skill-row .prof-dot.half{background:linear-gradient(90deg, var(--gold) 50%, transparent 50%);}
+.skill-row .prof-dot.prof{background:var(--gold); border-color:var(--gold-bright);}
+.skill-row .prof-dot.expertise{background:var(--gold); border-color:var(--gold-bright); box-shadow:0 0 0 2px var(--gold-bright);}
+.skill-row .sname{flex:1; min-width:0;}
+.skill-row .sattr{font-size:.68rem; color:var(--parchment-dim); text-transform:uppercase;}
+.skill-row .smod{font-family:var(--font-mono); width:44px; text-align:center; font-size:1.05rem; color:var(--gold-bright);}
+.skill-row .sbonus{width:52px;}
+
+/* Esquiva hero */
+.esquiva-hero{display:flex; align-items:center; gap:20px; justify-content:center; padding:14px 0;}
+.esquiva-shield{
+  width:130px; height:140px; position:relative; display:flex; align-items:center; justify-content:center; flex-direction:column;
+  background:
+    linear-gradient(160deg, var(--leather-2), var(--leather));
+  clip-path:polygon(50% 0%, 100% 18%, 100% 62%, 50% 100%, 0% 62%, 0% 18%);
+  border:3px solid var(--gold); box-shadow:0 6px 18px var(--shadow), inset 0 0 22px rgba(200,153,46,.15);
+}
+.esquiva-shield .num{font-family:var(--font-display); font-size:2.6rem; color:var(--gold-bright);}
+.esquiva-shield .lbl{font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; color:var(--parchment-dim);}
+.esquiva-formula{font-family:var(--font-mono); font-size:.82rem; color:var(--parchment-dim); text-align:center; margin-top:6px;}
+
+/* Cards grid (weapons/armor/inventory/spells) */
+.item-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:14px;}
+.item-card{position:relative;}
+.item-card.equipped-card{border-color:var(--gold); box-shadow:0 4px 14px var(--shadow), 0 0 0 1px var(--gold), inset 0 1px 0 rgba(255,255,255,.05);}
+.equipped-badge{display:inline-block; font-size:.7rem; font-weight:700; color:#241a06; background:linear-gradient(180deg, var(--gold-bright), var(--gold)); padding:2px 9px; border-radius:999px;}
+.item-card .ihead{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px; border-radius:6px;}
+.item-card .ihead[data-collapse-toggle]{cursor:pointer; user-select:none; margin:-4px -4px 6px; padding:4px;}
+.item-card .ihead[data-collapse-toggle]:hover{background:rgba(200,153,46,.08);}
+.item-card .ihead .iname{display:flex; align-items:center; gap:6px;}
+.item-card .ihead .chevron{font-size:.75rem; color:var(--parchment-dim); transition:transform .18s ease; flex-shrink:0;}
+.item-card.collapsed .chevron{transform:rotate(-90deg);}
+.item-card.collapsed .card-body{display:none;}
+.item-card .collapsed-summary{display:none; font-size:.82rem; color:var(--parchment-dim); margin:-2px 0 2px;}
+.item-card.collapsed .collapsed-summary{display:block;}
+.item-card .iname{font-family:var(--font-display); color:var(--gold-bright); font-size:1.02rem;}
+.item-card .itags{display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;}
+.item-card .actions{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+.armor-state-badge{font-size:.7rem; padding:2px 8px; border-radius:999px; font-weight:600;}
+.armor-state-badge{font-weight:700; border:1px solid rgba(0,0,0,.35); box-shadow:0 1px 3px rgba(0,0,0,.4);}
+.armor-state-badge.inteira{background:#3f7a35; color:#eafff0;}
+.armor-state-badge.pouco{background:#8a9c3f; color:#1a1c08;}
+.armor-state-badge.danificada{background:#c0932f; color:#211500;}
+.armor-state-badge.muito{background:#b8362f; color:#fff2ef;}
+.armor-state-badge.quebrada{background:#43403c; color:#e6e2da; text-decoration:line-through;}
+
+/* Conditions/damage types */
+.chip-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
+.chip{border:1px solid var(--leather-edge); border-radius:var(--radius-sm); padding:8px 10px; background:var(--void-2); display:flex; flex-direction:column; gap:4px;}
+.chip select{width:100%;}
+.state-normal{color:var(--parchment-dim);}
+.state-resistencia{color:var(--forest-bright);}
+.state-vulnerabilidade{color:var(--blood-bright);}
+.state-imunidade{color:var(--arcane);}
+
+/* History */
+.hist-entry{border-left:3px solid var(--gold-dim); padding:6px 12px; margin-bottom:8px; background:var(--void-2); border-radius:0 var(--radius-sm) var(--radius-sm) 0; font-size:.88rem;}
+.hist-entry .htime{font-family:var(--font-mono); font-size:.7rem; color:var(--parchment-dim);}
+
+/* Dice roller floating */
+#diceFab{
+  position:fixed; right:22px; bottom:22px; z-index:60;
+  width:66px; height:66px; border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, var(--gold-bright), var(--gold) 55%, var(--gold-dim) 100%);
+  border:3px solid #6b4e18; box-shadow:0 8px 22px rgba(0,0,0,.5), inset 0 2px 4px rgba(255,255,255,.4);
+  display:flex; align-items:center; justify-content:center; font-size:1.7rem; color:var(--ink);
+  transition:transform .15s ease;
+}
+#diceFab:hover{transform:scale(1.06) rotate(-6deg);}
+#diceTray{
+  position:fixed; right:22px; bottom:100px; z-index:61; width:320px; max-width:90vw;
+  background:linear-gradient(160deg, var(--parchment-2), var(--parchment)); color:var(--ink);
+  border-radius:var(--radius); border:2px solid var(--gold-dim); box-shadow:0 14px 40px rgba(0,0,0,.6);
+  padding:14px; transform-origin:bottom right; transform:scale(0); opacity:0; pointer-events:none; transition:transform .22s ease, opacity .18s ease;
+  max-height:70vh; overflow-y:auto;
+}
+#diceTray.open{transform:scale(1); opacity:1; pointer-events:auto;}
+#diceTray h4{margin:0 0 8px; font-family:var(--font-display); color:var(--ink-soft);}
+#diceTray .quickdice{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:10px;}
+#diceTray .quickdice button{background:var(--leather); color:var(--parchment); border:1px solid var(--leather-edge); border-radius:var(--radius-sm); padding:7px 0; font-family:var(--font-mono); font-size:.85rem;}
+#diceTray .customroll{display:flex; gap:6px; margin-bottom:10px;}
+#diceTray .customroll input{flex:1;}
+#diceResult{font-family:var(--font-mono); background:var(--ink); color:var(--gold-bright); border-radius:var(--radius-sm); padding:10px; margin-bottom:8px; min-height:20px; font-size:.95rem;}
+#diceHistoryMini{font-size:.78rem; color:var(--ink-soft); max-height:120px; overflow-y:auto;}
+#diceHistoryMini div{border-bottom:1px dashed var(--gold-dim); padding:3px 0;}
+
+/* Modal */
+.modal-overlay{position:fixed; inset:0; background:rgba(10,7,3,.7); z-index:80; display:flex; align-items:center; justify-content:center; padding:16px;}
+.modal{background:linear-gradient(160deg, var(--leather-2), var(--leather)); border:2px solid var(--gold-dim); border-radius:var(--radius); padding:20px; max-width:520px; width:100%; max-height:86vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.modal h3{font-family:var(--font-display); color:var(--gold-bright); margin-top:0;}
+.modal .close-x{float:right; background:none; border:none; color:var(--parchment-dim); font-size:1.3rem;}
+
+/* Roll popup toast */
+#rollToastWrap{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:90; display:flex; flex-direction:column; gap:8px; align-items:center;}
+.roll-toast{
+  background:linear-gradient(160deg, var(--parchment-2), var(--parchment)); color:var(--ink);
+  border:2px solid var(--gold); border-radius:var(--radius); padding:10px 18px; box-shadow:0 10px 26px rgba(0,0,0,.55);
+  font-family:var(--font-mono); font-size:.9rem; text-align:center; min-width:220px; animation:scrollUnfurl .35s ease;
+}
+.roll-toast .title{font-family:var(--font-display); font-size:.8rem; color:var(--ink-soft); letter-spacing:.05em; text-transform:uppercase;}
+.roll-toast .big{font-size:1.6rem; color:var(--blood); font-weight:700;}
+@keyframes scrollUnfurl{from{opacity:0; transform:scaleY(.3) translateY(-10px);} to{opacity:1; transform:none;}}
+
+/* Bottom nav (mobile) */
+#bottomnav{display:none;}
+
+/* Character switcher list */
+.char-list-item{display:flex; align-items:center; gap:10px; padding:8px; border:1px solid var(--leather-edge); border-radius:var(--radius-sm); margin-bottom:6px; background:var(--void-2);}
+.char-list-item.active{border-color:var(--gold);}
+.char-list-item .cname{flex:1; font-family:var(--font-display); color:var(--parchment);}
+
+/* Responsive */
+@media (max-width: 880px){
+  #sidebar{display:none;}
+  #app{flex-direction:column;}
+  #content{padding:14px 12px 96px;}
+  #bottomnav{
+    display:flex; position:fixed; bottom:0; left:0; right:0; z-index:50;
+    background:linear-gradient(0deg, var(--void-2), var(--leather-2));
+    border-top:2px solid var(--leather-edge); overflow-x:auto; padding:6px 4px;
+  }
+  #bottomnav button{
+    flex:0 0 auto; background:none; border:none; color:var(--parchment-dim); font-size:.68rem;
+    display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 10px; min-width:64px;
+  }
+  #bottomnav button.active{color:var(--gold-bright);}
+  #bottomnav button .ic{font-size:1.25rem;}
+  #diceFab{right:12px; bottom:74px; width:56px; height:56px; font-size:1.4rem;}
+  #diceTray{right:8px; bottom:136px; width:88vw;}
+  #topbar .idblock .nm{max-width:44vw;}
+  .esquiva-shield{width:110px; height:118px;}
+}
+@media (max-width:480px){
+  #topbar{padding:8px 10px;}
+  #topbar .vitals{gap:8px;}
+  .attr-grid{grid-template-columns:repeat(2,1fr);}
+  #resourcePanel{padding:8px 10px; gap:8px;}
+  .bar-wrap{flex-basis:130px; min-width:130px; padding:6px 8px;}
+  .bar-wrap.pip-wrap{flex-basis:100%;}
+  .pip{width:16px; height:16px;}
+}
+
+/* Print / PDF */
+#printSheet{display:none;}
+@media print{
+  #sidebar,#topbar,#resourcePanel,#bottomnav,#diceFab,#diceTray,#rollToastWrap,.no-print{display:none !important;}
+  #app,#main,#content{display:block !important; padding:0; margin:0;}
+  body{background:#fff; color:#111;}
+  #printSheet{display:block !important;}
+  #printSheet *{color:#111 !important;}
+  #printSheet h1,#printSheet h2,#printSheet h3{font-family:'Cinzel', serif; color:#3b2a12 !important;}
+  #printSheet .p-section{page-break-inside:avoid; border:1px solid #999; border-radius:6px; padding:10px; margin-bottom:12px;}
+  #printSheet table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  #printSheet td,#printSheet th{border:1px solid #ccc; padding:4px 6px; text-align:left;}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="brand">
+      <div class="title">✦ Varagon ✦</div>
+      <div class="sub">Grimório do Aventureiro</div>
+    </div>
+    <ul id="tabnav"></ul>
+    <div class="foot">Salvamento automático local</div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+    <header id="topbar">
+      <div class="portrait" id="topPortrait">👤</div>
+      <div class="idblock">
+        <div class="nm" id="topName">Sem Nome</div>
+        <div class="meta" id="topMeta">Nível 1 · — · —</div>
+      </div>
+      <div class="vitals">
+        <div class="vit"><span class="lbl">Vida</span><span class="val" id="topHp">0/0</span></div>
+        <div class="vit"><span class="lbl">Armadura</span><span class="val" id="topArmorHp">0/0</span></div>
+        <div class="vit"><span class="lbl">Esquiva</span><span class="val" id="topEsquiva">10</span></div>
+        <div class="vit"><span class="lbl">Magia</span><span class="val" id="topSlots">—</span></div>
+      </div>
+      <div id="saveIndicator"><span class="dot"></span><span id="saveText">Salvo</span></div>
+      <div class="icons">
+        <button id="btnSwitchChar" title="Trocar personagem">🔀</button>
+        <button id="btnExportJson" title="Exportar personagem (.json)">⬇️</button>
+        <button id="btnImportJson" title="Importar personagem (.json)">⬆️</button>
+        <button id="btnExportPdf" title="Exportar PDF">🖨️</button>
+        <button id="btnGotoConfig" title="Configurações">⚙️</button>
+      </div>
+      <input type="file" id="importFileInput" accept=".json" class="hidden">
+    </header>
+
+    <div id="resourcePanel"></div>
+
+    <main id="content"></main>
+  </div>
+</div>
+
+<nav id="bottomnav"></nav>
+
+<div id="diceFab" title="Rolador de Dados">🎲</div>
+<div id="diceTray">
+  <h4>Rolador Universal</h4>
+  <div class="quickdice">
+    <button data-die="4">d4</button>
+    <button data-die="6">d6</button>
+    <button data-die="8">d8</button>
+    <button data-die="10">d10</button>
+    <button data-die="12">d12</button>
+    <button data-die="20">d20</button>
+    <button data-die="100">d100</button>
+    <button data-die="20adv">d20 ⬆</button>
+  </div>
+  <div class="customroll">
+    <input type="text" id="customDiceExpr" placeholder="ex: 2d20kh1+5">
+    <button class="btn small" id="btnRollCustom">Rolar</button>
+  </div>
+  <div id="diceResult">Pronto para rolar.</div>
+  <div id="diceHistoryMini"></div>
+</div>
+
+<div id="rollToastWrap"></div>
+
+<div id="modalRoot"></div>
+
+<!-- Printable sheet (populated on export) -->
+<div id="printSheet"></div>
+
+<script>
+/* =========================================================
+   VARAGON — ARQUITETURA EM MÓDULOS (namespaces)
+   Store  -> persistência (localStorage), múltiplos personagens
+   Model  -> criação de personagem padrão + listas de referência
+   Calc   -> todos os cálculos automáticos e regras de Varagon
+   Dice   -> parser e execução de expressões de dados
+   Hist   -> histórico de combate/ações
+   UI     -> renderização das abas e da interface
+   PDF    -> montagem da folha para impressão/exportação em PDF
+   App    -> inicialização
+   ========================================================= */
+
+/* ---------------------- STORE ---------------------- */
+const Store = (() => {
+  const LIST_KEY = 'varagon_char_list';
+  const ACTIVE_KEY = 'varagon_active_id';
+  const CHAR_PREFIX = 'varagon_char_';
+
+  function listIds(){
+    try{ return JSON.parse(localStorage.getItem(LIST_KEY)) || []; }catch(e){ return []; }
+  }
+  function saveList(ids){ localStorage.setItem(LIST_KEY, JSON.stringify(ids)); }
+  function getActiveId(){ return localStorage.getItem(ACTIVE_KEY); }
+  function setActiveId(id){ localStorage.setItem(ACTIVE_KEY, id); }
+  function load(id){
+    try{
+      const c = JSON.parse(localStorage.getItem(CHAR_PREFIX+id));
+      return c ? Model.normalize(c) : null;
+    }catch(e){ return null; }
+  }
+  function save(char){
+    localStorage.setItem(CHAR_PREFIX+char.id, JSON.stringify(char));
+    let ids = listIds();
+    if(!ids.includes(char.id)){ ids.push(char.id); saveList(ids); }
+  }
+  function remove(id){
+    localStorage.removeItem(CHAR_PREFIX+id);
+    saveList(listIds().filter(x=>x!==id));
+  }
+  function allCharsSummary(){
+    return listIds().map(id=>{
+      const c = load(id);
+      return c ? {id:c.id, name:c.meta.name||'Sem nome', level:c.meta.level||1, cls:c.meta.classe||''} : null;
+    }).filter(Boolean);
+  }
+  return {listIds, getActiveId, setActiveId, load, save, remove, allCharsSummary};
+})();
+
+/* ---------------------- MODEL ---------------------- */
+const Model = (() => {
+  const SKILLS = [
+    ['Acrobacia','des'],['Arcanismo','int'],['Atletismo','for'],['Atuação','car'],
+    ['Enganação','car'],['Furtividade','des'],['História','int'],['Intimidação','car'],
+    ['Intuição','sab'],['Investigação','int'],['Lidar com Animais','sab'],['Medicina','sab'],
+    ['Natureza','int'],['Percepção','sab'],['Persuasão','car'],['Prestidigitação','des'],
+    ['Religião','int'],['Sobrevivência','sab']
+  ];
+  const DEFAULT_CONDITIONS = ['Cego','Enfeitiçado','Ensurdecido','Exausto','Amedrontado','Agarrado','Incapacitado','Invisível','Paralisado','Petrificado','Envenenado','Caído','Contido','Atordoado','Inconsciente'];
+  const DEFAULT_DAMAGE_TYPES = ['Ácido','Contundente','Cortante','Perfurante','Fogo','Frio','Elétrico','Trovão','Veneno','Necrótico','Radiante','Psíquico','Força'];
+
+  function uid(prefix='id'){ return prefix+'_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+
+  function newAttr(base=10){ return {base, temp:0, perm:0}; }
+
+  function blankCharacter(name='Novo Aventureiro'){
+    const skills = {};
+    SKILLS.forEach(([n,attr])=>{ skills[n] = {attr, prof:'none', temp:0, perm:0}; });
+    const saves = {};
+    ['for','des','con','int','sab','car'].forEach(a=>{ saves[a] = {proficient:false, temp:0, perm:0}; });
+    const dmgTypes = {};
+    DEFAULT_DAMAGE_TYPES.forEach(t=>{ dmgTypes[t] = 'normal'; });
+
+    return {
+      id: uid('char'),
+      meta:{
+        name, title:'', classe:'', subclasse:'', raca:'', level:1, xp:0, tendencia:'',
+        origem:'', reino:'', idade:'', sexo:'', altura:'', peso:'', idiomas:'', divindade:'',
+        jogador:'', mestre:'', campanha:'', personalidade:'', ideais:'', vinculos:'', defeitos:'',
+        historia:'', observacoes:'', portrait:''
+      },
+      attributes:{ for:newAttr(), des:newAttr(), con:newAttr(), int:newAttr(), sab:newAttr(), car:newAttr() },
+      proficiency:{ auto:true, manual:2 },
+      hp:{ max:10, current:10, temp:0, permWounds:0 },
+      hitDice:{ max:1, current:1, die:'d8' },
+      reaction:{ used:false, esquivaBonusActive:false, protecaoRdActive:false },
+      esquivaOther:0,
+      armors:[],
+      weapons:[],
+      equipment:{ capacete:'', peitoral:'', ombreiras:'', bracadeiras:'', luvas:'', cinto:'', calcas:'', botas:'', anel1:'', anel2:'', amuleto:'', colar:'', manto:'', escudo:'', armaPrincipal:'', armaSecundaria:'', armaReserva:'', itemEspecial:'' },
+      inventory:[],
+      weightConfig:{ multiplier:15 },
+      currency:{ cp:0, sp:0, ep:0, gp:0, pp:0, custom:[] },
+      skills, saves,
+      conditions:[],
+      damageTypes:dmgTypes,
+      spells:{ list:[], slots:{0:{max:0,used:0},1:{max:0,used:0},2:{max:0,used:0},3:{max:0,used:0},4:{max:0,used:0},5:{max:0,used:0},6:{max:0,used:0},7:{max:0,used:0},8:{max:0,used:0},9:{max:0,used:0}}, concentratingOn:null },
+      classResources:[],
+      raceFeatures:[],
+      classFeatures:[],
+      companions:[],
+      mounts:[],
+      notes:'',
+      history:[],
+      settings:{ theme:'dark', critRule:'double_dice', fumbleRule:'none', dmgOrder:'default', resistRounding:'down', animations:true, sounds:false, autoRoll:true, scale:100, spellsCollapsed:false }
+    };
+  }
+  function normalize(c){
+    if(!c) return c;
+    const blank = blankCharacter((c.meta && c.meta.name) || 'Aventureiro');
+    Object.keys(blank).forEach(k=>{ if(c[k]===undefined) c[k] = blank[k]; });
+    ['armors','weapons','inventory','conditions','classResources','raceFeatures','classFeatures','companions','mounts','history'].forEach(k=>{
+      if(!Array.isArray(c[k])) c[k] = [];
+    });
+    if(!c.spells) c.spells = blank.spells;
+    if(!c.spells.slots) c.spells.slots = blank.spells.slots;
+    if(!Array.isArray(c.spells.list)) c.spells.list = [];
+    if(!c.currency) c.currency = blank.currency;
+    if(!Array.isArray(c.currency.custom)) c.currency.custom = [];
+    if(!c.damageTypes) c.damageTypes = blank.damageTypes;
+    if(!c.equipment) c.equipment = blank.equipment;
+    if(!c.settings) c.settings = blank.settings;
+    if(!c.weightConfig) c.weightConfig = blank.weightConfig;
+    if(!c.hitDice) c.hitDice = blank.hitDice;
+    if(!c.reaction) c.reaction = blank.reaction;
+    // Compatibilidade com fichas antigas: garante slot/equipped/recolhido em cada peça de armadura e arma
+    c.armors.forEach(a=>{ if(a.slot===undefined) a.slot='Principal'; if(a.equipped===undefined) a.equipped=false; if(a.collapsed===undefined) a.collapsed=false; });
+    c.weapons.forEach(w=>{ if(w.slot===undefined) w.slot='Nenhum'; if(w.equipped===undefined) w.equipped=false; if(w.collapsed===undefined) w.collapsed=false; });
+    if(c.spells && Array.isArray(c.spells.list)) c.spells.list.forEach(sp=>{ if(sp.collapsed===undefined) sp.collapsed=false; });
+    if(c.settings && c.settings.spellsCollapsed===undefined) c.settings.spellsCollapsed=false;
+    return c;
+  }
+  return {SKILLS, DEFAULT_CONDITIONS, DEFAULT_DAMAGE_TYPES, uid, newAttr, blankCharacter, normalize};
+})();
+
+/* ---------------------- CALC ---------------------- */
+const Calc = (() => {
+  function total(attr){ return attr.base + attr.temp + attr.perm; }
+  function mod(attr){ return Math.floor((total(attr)-10)/2); }
+  function fmt(n){ return (n>=0?'+':'')+n; }
+
+  function profBonus(char){
+    if(!char.proficiency.auto) return char.proficiency.manual;
+    const lvl = char.meta.level||1;
+    if(lvl>=17) return 6;
+    if(lvl>=13) return 5;
+    if(lvl>=9) return 4;
+    if(lvl>=5) return 3;
+    return 2;
+  }
+
+  // Retorna todas as peças de armadura atualmente equipadas (múltiplas ao mesmo tempo são permitidas)
+  function equippedArmors(char){ return char.armors.filter(a=>a.equipped); }
+  // Retrocompatibilidade: retorna a peça "Principal" equipada, ou a primeira equipada, ou null
+  function equippedArmor(char){
+    const eq = equippedArmors(char);
+    return eq.find(a=>a.slot==='Principal') || eq[0] || null;
+  }
+
+  function armorStateInfo(armor){
+    if(!armor || armor.hpMax<=0) return {pct:100, label:'Inteira', key:'inteira', broken:false};
+    const pct = Math.max(0, Math.min(100, Math.round((armor.hpCurrent/armor.hpMax)*100)));
+    let label='Inteira', key='inteira';
+    if(pct<=0){ label='Quebrada'; key='quebrada'; }
+    else if(pct<25){ label='Muito Danificada'; key='muito'; }
+    else if(pct<50){ label='Danificada'; key='danificada'; }
+    else if(pct<75){ label='Pouco Danificada'; key='pouco'; }
+    else { label='Inteira'; key='inteira'; }
+    return {pct, label, key, broken: pct<=0};
+  }
+
+  // Soma o Bônus de Esquiva e a Redução de Dano de TODAS as peças equipadas e não quebradas
+  function armorContribution(char){
+    let dodge=0, rd=0;
+    equippedArmors(char).forEach(a=>{
+      const st = armorStateInfo(a);
+      if(!st.broken){ dodge += (a.dodgeBonus||0); rd += (a.rd||0); }
+    });
+    return {dodge, rd};
+  }
+
+  // Soma a Vida (atual/máxima) de todas as peças equipadas — usado nas barras de recurso e na barra superior
+  function armorHpTotals(char){
+    let max=0, cur=0;
+    equippedArmors(char).forEach(a=>{ max += (a.hpMax||0); cur += (a.hpCurrent||0); });
+    return {max, cur};
+  }
+
+  function esquiva(char){
+    const pb = profBonus(char);
+    const desMod = mod(char.attributes.des);
+    const arm = armorContribution(char);
+    const reactionBonus = char.reaction.esquivaBonusActive ? 2 : 0;
+    const value = 8 + pb + desMod + arm.dodge + (char.esquivaOther||0) + reactionBonus;
+    return {value, pb, desMod, armorDodge:arm.dodge, other:(char.esquivaOther||0), reactionBonus};
+  }
+
+  function skillMod(char, name){
+    const s = char.skills[name];
+    const attrMod = mod(char.attributes[s.attr]);
+    const pb = profBonus(char);
+    let profPart = 0;
+    if(s.prof==='half') profPart = Math.floor(pb/2);
+    else if(s.prof==='prof') profPart = pb;
+    else if(s.prof==='expertise') profPart = pb*2;
+    return attrMod + profPart + (s.temp||0) + (s.perm||0);
+  }
+
+  function saveMod(char, attrKey){
+    const s = char.saves[attrKey];
+    const attrMod = mod(char.attributes[attrKey]);
+    const pb = profBonus(char);
+    return attrMod + (s.proficient?pb:0) + (s.temp||0) + (s.perm||0);
+  }
+
+  function weaponAttrMod(char, weapon){
+    if(weapon.modAttr==='custom') return weapon.customMod||0;
+    return mod(char.attributes[weapon.modAttr||'for']);
+  }
+
+  function weaponAttackBonus(char, weapon){
+    const pb = weapon.proficient===false ? 0 : profBonus(char);
+    return weaponAttrMod(char,weapon) + pb + (weapon.magicBonus||0) + (weapon.tempBonus||0);
+  }
+
+  function carryWeight(char){
+    let w = 0;
+    char.inventory.forEach(i=>{ w += (i.weight||0)*(i.qty||1); });
+    char.armors.forEach(a=>{ w += (a.weight||0); });
+    char.weapons.forEach(wp=>{ w += (wp.weight||0); });
+    return w;
+  }
+  function carryThresholds(char){
+    const forScore = total(char.attributes.for);
+    const m = char.weightConfig.multiplier||15;
+    return { light: forScore*(m/3), medium: forScore*(m*2/3), heavy: forScore*m };
+  }
+
+  function currencyTotalGold(char){
+    const c = char.currency;
+    let g = (c.cp||0)*0.01 + (c.sp||0)*0.1 + (c.ep||0)*0.5 + (c.gp||0)*1 + (c.pp||0)*10;
+    (c.custom||[]).forEach(cu=>{ g += (cu.qty||0)*(cu.rateToGold||0); });
+    return Math.round(g*100)/100;
+  }
+
+  /* Ordem obrigatória de dano (Varagon): bruto -> RD -> min 1 -> resistência -> vulnerabilidade -> imunidade -> armadura(s) -> personagem */
+  function applyDamagePipeline(char, rawDamage, damageTypeKey, isCrit){
+    const steps = [];
+    let dmg = rawDamage;
+    steps.push({label:'Dano bruto', value:dmg});
+
+    const contrib = armorContribution(char); // soma de todas as peças equipadas e não quebradas
+    const rd = contrib.rd;
+    const beforeRd = dmg;
+    dmg = Math.max(0, dmg - rd);
+    if(dmg<=0 && char.damageTypes[damageTypeKey]!=='imunidade'){ dmg = 1; }
+    steps.push({label:`Redução de Dano (RD ${rd})`, value:dmg, note: beforeRd-rd<=0 ? 'Dano mínimo de 1 aplicado' : ''});
+
+    const state = char.damageTypes[damageTypeKey] || 'normal';
+    if(state==='resistencia'){
+      dmg = Math.floor(dmg/2);
+      steps.push({label:'Resistência aplicada (½)', value:dmg});
+    } else {
+      steps.push({label:'Resistência', value:dmg, note:'não aplicável'});
+    }
+    if(state==='vulnerabilidade'){
+      dmg = dmg*2;
+      steps.push({label:'Vulnerabilidade aplicada (x2)', value:dmg});
+    } else {
+      steps.push({label:'Vulnerabilidade', value:dmg, note:'não aplicável'});
+    }
+    if(state==='imunidade'){
+      dmg = 0;
+      steps.push({label:'Imunidade — dano zerado', value:dmg});
+    } else {
+      steps.push({label:'Imunidade', value:dmg, note:'não aplicável'});
+    }
+
+    // Distribui o dano restante entre TODAS as peças de armadura equipadas (a Principal absorve primeiro,
+    // depois escudo/elmo/braceletes/outros, na ordem em que estão equipados) até se esgotarem
+    const eqArmors = equippedArmors(char).filter(a=>!armorStateInfo(a).broken)
+      .sort((a,b)=> (a.slot==='Principal'?-1:0) - (b.slot==='Principal'?-1:0));
+    let remaining = dmg;
+    let armorAbsorbed = 0;
+    if(dmg>0){
+      eqArmors.forEach(a=>{
+        if(remaining<=0) return;
+        const absorb = Math.min(a.hpCurrent, remaining);
+        if(absorb>0){
+          a.hpCurrent = Math.max(0, a.hpCurrent - absorb);
+          remaining -= absorb;
+          armorAbsorbed += absorb;
+          steps.push({label:`Vida da Armadura (${a.name}) absorveu`, value:absorb});
+          if(a.hpCurrent<=0){ steps.push({label:`${a.name} quebrou`, value:0}); }
+        }
+      });
+    }
+    const hpDamage = Math.max(0, remaining);
+    if(eqArmors.length===0 && dmg>0){ steps.push({label:'Nenhuma armadura equipada para absorver', value:dmg}); }
+    char.hp.current = Math.max(0, char.hp.current - hpDamage);
+    steps.push({label:'Dano final ao personagem', value:hpDamage});
+
+    return {finalDamage:dmg, armorAbsorbed, hpDamage, steps, armors:eqArmors};
+  }
+
+  return {total, mod, fmt, profBonus, equippedArmor, equippedArmors, armorHpTotals, armorStateInfo, armorContribution, esquiva,
+    skillMod, saveMod, weaponAttrMod, weaponAttackBonus, carryWeight, carryThresholds,
+    currencyTotalGold, applyDamagePipeline};
+})();
+
+/* ---------------------- DICE ---------------------- */
+const Dice = (() => {
+  function rollDie(sides){ return 1+Math.floor(Math.random()*sides); }
+
+  // Parses terms like: 2d20kh1, 3d6, 4d8+5, 8d6+4, d20, 10, -3
+  function parseAndRoll(expr){
+    expr = expr.trim().replace(/\s+/g,'');
+    if(!expr) return null;
+    const tokens = expr.match(/[+-]?[^+-]+/g);
+    if(!tokens) return null;
+    let total = 0;
+    const parts = [];
+    for(const tok of tokens){
+      const sign = tok.startsWith('-') ? -1 : 1;
+      const clean = tok.replace(/^[+-]/,'');
+      const diceMatch = clean.match(/^(\d*)d(\d+)(k[hl]\d+)?$/i);
+      if(diceMatch){
+        const count = diceMatch[1] ? parseInt(diceMatch[1]) : 1;
+        const sides = parseInt(diceMatch[2]);
+        const keep = diceMatch[3];
+        let rolls = [];
+        for(let i=0;i<count;i++) rolls.push(rollDie(sides));
+        let kept = rolls.slice();
+        let keepLabel = '';
+        if(keep){
+          const kh = /kh(\d+)/i.exec(keep);
+          const kl = /kl(\d+)/i.exec(keep);
+          const sorted = rolls.slice().sort((a,b)=>b-a);
+          if(kh){ kept = sorted.slice(0, parseInt(kh[1])); keepLabel = ` (mantendo ${kh[1]} maior(es))`; }
+          if(kl){ kept = sorted.slice().sort((a,b)=>a-b).slice(0, parseInt(kl[1])); keepLabel = ` (mantendo ${kl[1]} menor(es))`; }
+        }
+        const sum = kept.reduce((a,b)=>a+b,0)*sign;
+        total += sum;
+        parts.push(`${sign<0?'-':'+'}[${rolls.join(', ')}]${keepLabel}d${sides}=${sign<0?-sum:sum}`);
+      } else if(/^\d+$/.test(clean)){
+        const n = parseInt(clean)*sign;
+        total += n;
+        parts.push(`${sign<0?'-':'+'}${clean}`);
+      }
+    }
+    return {total, detail: parts.join(' '), expr};
+  }
+
+  return {rollDie, parseAndRoll};
+})();
+
+/* ---------------------- HISTORY ---------------------- */
+const Hist = (() => {
+  function add(char, type, resultText, detail){
+    const entry = { time: new Date().toLocaleString('pt-BR'), type, result: resultText, detail: detail||'' };
+    char.history.unshift(entry);
+    if(char.history.length>500) char.history.length = 500;
+    return entry;
+  }
+  return {add};
+})();
+
+/* ---------------------- APP STATE ---------------------- */
+let CURRENT = null;
+let saveTimer = null;
+
+function markDirty(){
+  const el = document.getElementById('saveIndicator');
+  el.classList.add('saving');
+  document.getElementById('saveText').textContent = 'Salvando...';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    Store.save(CURRENT);
+    el.classList.remove('saving');
+    document.getElementById('saveText').textContent = 'Salvo';
+  }, 350);
+}
+
+function toast(title, big, sub){
+  const wrap = document.getElementById('rollToastWrap');
+  const el = document.createElement('div');
+  el.className = 'roll-toast';
+  el.innerHTML = `<div class="title">${title}</div><div class="big">${big}</div>${sub?`<div class="muted">${sub}</div>`:''}`;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); }, 3200);
+}
+
+function openModal(html){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `<div class="modal-overlay" id="modalOverlay"><div class="modal">${html}</div></div>`;
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') closeModal(); });
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+
+/* Nomes de exibição dos atributos — global, usado pela UI e pelo módulo de PDF */
+const ATTR_NAMES = {for:'Força', des:'Destreza', con:'Constituição', int:'Inteligência', sab:'Sabedoria', car:'Carisma'};
+
+/* ---------------------- UI ---------------------- */
+const UI = (() => {
+  const TABS = [
+    {id:'perfil', label:'Perfil', ic:'📜'},
+    {id:'atributos', label:'Atributos', ic:'💪'},
+    {id:'combate', label:'Combate', ic:'⚔️'},
+    {id:'armas', label:'Armas', ic:'🗡️'},
+    {id:'armaduras', label:'Armaduras', ic:'🛡️'},
+    {id:'equipamentos', label:'Equipamentos', ic:'🎽'},
+    {id:'inventario', label:'Inventário', ic:'🎒'},
+    {id:'magias', label:'Magias', ic:'✨'},
+    {id:'pericias', label:'Perícias', ic:'🎯'},
+    {id:'resistencia', label:'Testes de Resistência', ic:'🧿'},
+    {id:'condicoes', label:'Condições', ic:'💀'},
+    {id:'tiposdano', label:'Tipos de Dano', ic:'🔥'},
+    {id:'recursos', label:'Recursos & Cia.', ic:'🐎'},
+    {id:'anotacoes', label:'Anotações', ic:'📝'},
+    {id:'historico', label:'Histórico', ic:'📖'},
+    {id:'config', label:'Configurações', ic:'⚙️'},
+  ];
+  let activeTab = 'perfil';
+
+  function buildNav(){
+    const nav = document.getElementById('tabnav');
+    nav.innerHTML = TABS.map(t=>`<li><button data-tab="${t.id}" class="${t.id===activeTab?'active':''}"><span class="ic">${t.ic}</span>${t.label}</button></li>`).join('');
+    nav.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{ activeTab=b.dataset.tab; render(); }));
+
+    const bottom = document.getElementById('bottomnav');
+    bottom.innerHTML = TABS.map(t=>`<button data-tab="${t.id}" class="${t.id===activeTab?'active':''}"><span class="ic">${t.ic}</span>${t.label.split(' ')[0]}</button>`).join('');
+    bottom.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{ activeTab=b.dataset.tab; render(); }));
+  }
+
+  function setTab(id){ activeTab=id; render(); }
+
+  function renderTopbar(){
+    const c = CURRENT;
+    document.getElementById('topName').textContent = c.meta.name || 'Sem Nome';
+    document.getElementById('topMeta').textContent = `Nível ${c.meta.level||1} · ${c.meta.classe||'—'} · ${c.meta.raca||'—'}`;
+    document.getElementById('topPortrait').style.backgroundImage = c.meta.portrait ? `url(${c.meta.portrait})` : '';
+    document.getElementById('topPortrait').textContent = c.meta.portrait ? '' : '👤';
+    document.getElementById('topHp').textContent = `${c.hp.current}/${c.hp.max}`;
+    const armTotals = Calc.armorHpTotals(c);
+    document.getElementById('topArmorHp').textContent = armTotals.max>0 ? `${armTotals.cur}/${armTotals.max}` : '—';
+    document.getElementById('topEsquiva').textContent = Calc.esquiva(c).value;
+    const slotsUsed = Object.values(c.spells.slots).reduce((a,s)=>a+(s.max>0?1:0),0);
+    let slotsTxt = '—';
+    if(slotsUsed>0){
+      slotsTxt = Object.entries(c.spells.slots).filter(([,s])=>s.max>0).map(([lvl,s])=>`${lvl}:${s.max-s.used}/${s.max}`).join(' ');
+    }
+    document.getElementById('topSlots').textContent = slotsTxt;
+  }
+
+  function barHTML(id, label, cur, max, cls, extra, editable=true){
+    const pct = max>0 ? Math.max(0,Math.min(100,(cur/max)*100)) : 0;
+    if(!editable){
+      return `<div class="bar-wrap" data-barwrap="${id}">
+        <div class="bl"><span>${label}</span><span>${extra!==undefined?extra:(cur+'/'+max)}</span></div>
+        <div class="bar-line">
+          <div class="bar-track" style="cursor:default;" title="Ajuste cada peça na aba Armaduras"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+        </div>
+      </div>`;
+    }
+    return `<div class="bar-wrap" data-barwrap="${id}">
+      <div class="bl"><span>${label}</span><span>${extra!==undefined?extra:(cur+'/'+max)}</span></div>
+      <div class="bar-line">
+        <button class="bar-step" data-barstep="${id}" data-dir="-1" title="-1">−</button>
+        <div class="bar-track" data-bartrack="${id}" title="Clique para ajustar manualmente"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+        <button class="bar-step" data-barstep="${id}" data-dir="1" title="+1">+</button>
+      </div>
+    </div>`;
+  }
+
+  function reactionBarHTML(c){
+    const available = !c.reaction.used;
+    return `<div class="bar-wrap" data-barwrap="reaction">
+      <div class="bl"><span>Reação</span><span>${available?'Disponível':'Usada'}</span></div>
+      <div class="bar-track" data-bartrack="reaction" title="Clique para marcar/liberar a reação"><div class="bar-fill reaction" style="width:${available?100:0}%"></div></div>
+    </div>`;
+  }
+
+  function pipRowHTML(lvl, label, s){
+    let pips = '';
+    for(let i=1;i<=s.max;i++){
+      const spent = i<=s.used;
+      pips += `<div class="pip ${spent?'spent':''}" data-piplevel="${lvl}" data-pipindex="${i}" title="${label} — espaço ${i} (clique para gastar/recuperar)"></div>`;
+    }
+    return `<div class="bar-wrap pip-wrap" data-barwrap="spell${lvl}">
+      <div class="pip-row-label"><span>${label}</span><span>${s.max-s.used}/${s.max}</span></div>
+      <div class="pip-row">${pips}</div>
+    </div>`;
+  }
+
+  const SPELL_LEVEL_LABELS = {0:'Truques',1:'Magia Nível 1',2:'Magia Nível 2',3:'Magia Nível 3',4:'Magia Nível 4',5:'Magia Nível 5',6:'Magia Nível 6',7:'Magia Nível 7',8:'Magia Nível 8',9:'Magia Nível 9'};
+
+  function renderResourcePanel(){
+    const c = CURRENT;
+    const eqArmors = Calc.equippedArmors(c);
+    const armTotals = Calc.armorHpTotals(c);
+    const singleArmor = eqArmors.length===1 ? eqArmors[0] : null;
+    const hd = c.hitDice;
+    let html = '';
+    html += barHTML('hp', 'Vida', c.hp.current, c.hp.max, 'hp');
+    html += barHTML('temp', 'Vida Temporária', c.hp.temp, Math.max(c.hp.temp,1), 'temp', c.hp.temp);
+    html += barHTML('armor', 'Vida da Armadura', armTotals.cur, Math.max(armTotals.max,1), 'armor',
+      armTotals.max>0 ? `${armTotals.cur}/${armTotals.max}${eqArmors.length>1?` (${eqArmors.length} peças)`:''}` : '—',
+      !!singleArmor);
+    html += reactionBarHTML(c);
+    html += barHTML('hitdice', 'Dados de Vida', hd.current, hd.max, 'hitdice', `${hd.current}/${hd.max} ${hd.die}`);
+    document.getElementById('resourcePanel').innerHTML = html;
+    bindResourceBarEvents();
+  }
+
+  function bindResourceBarEvents(){
+    const c = CURRENT;
+    const panel = document.getElementById('resourcePanel');
+
+    // A barra de "Vida da Armadura" só é editável diretamente quando há exatamente 1 peça equipada;
+    // com 0 ou várias peças, o jogador ajusta cada uma na aba Armaduras (evita ambiguidade de qual peça alterar).
+    function singleArmor(){ const eq = Calc.equippedArmors(c); return eq.length===1 ? eq[0] : null; }
+
+    function pulse(trackSelector, up){
+      const track = panel.querySelector(trackSelector);
+      const fill = track && track.querySelector('.bar-fill');
+      if(!fill) return;
+      fill.classList.remove('pulse-up','pulse-down');
+      void fill.offsetWidth;
+      fill.classList.add(up?'pulse-up':'pulse-down');
+    }
+
+    function currentValue(id){
+      const arm = singleArmor();
+      if(id==='hp') return c.hp.current;
+      if(id==='temp') return c.hp.temp;
+      if(id==='armor') return arm?arm.hpCurrent:0;
+      if(id==='hitdice') return c.hitDice.current;
+      return 0;
+    }
+    function maxValue(id){
+      const arm = singleArmor();
+      if(id==='hp') return c.hp.max;
+      if(id==='temp') return Math.max(c.hp.temp,1);
+      if(id==='armor') return arm?arm.hpMax:1;
+      if(id==='hitdice') return c.hitDice.max;
+      return 1;
+    }
+    function setResource(id, newVal){
+      const arm = singleArmor();
+      const before = currentValue(id);
+      if(id==='hp'){ c.hp.current = Math.max(0, Math.min(c.hp.max, newVal)); }
+      else if(id==='temp'){ c.hp.temp = Math.max(0, newVal); }
+      else if(id==='armor'){ if(!arm) return; arm.hpCurrent = Math.max(0, Math.min(arm.hpMax, newVal)); }
+      else if(id==='hitdice'){ c.hitDice.current = Math.max(0, Math.min(c.hitDice.max, newVal)); }
+      pulse(`[data-bartrack="${id}"]`, currentValue(id)>before);
+      markDirty(); render();
+    }
+
+    panel.querySelectorAll('[data-barstep]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = btn.dataset.barstep;
+        const dir = parseInt(btn.dataset.dir);
+        setResource(id, currentValue(id)+dir);
+      });
+    });
+
+    panel.querySelectorAll('[data-bartrack]').forEach(track=>{
+      const id = track.dataset.bartrack;
+      track.addEventListener('click', (e)=>{
+        if(id==='reaction'){
+          c.reaction.used = !c.reaction.used;
+          if(!c.reaction.used){ c.reaction.esquivaBonusActive=false; c.reaction.protecaoRdActive=false; }
+          markDirty(); render();
+          return;
+        }
+        const rect = track.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (e.clientX-rect.left)/rect.width));
+        setResource(id, Math.round(pct*maxValue(id)));
+      });
+    });
+  }
+
+  function tabHeader(title, sub){
+    return `<div class="section-title">${title}</div>${sub?`<div class="section-sub">${sub}</div>`:''}`;
+  }
+
+  function field(label, inputHtml){ return `<div class="field"><label>${label}</label>${inputHtml}</div>`; }
+
+  function bindMetaInputs(container){
+    container.querySelectorAll('[data-meta]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        CURRENT.meta[inp.dataset.meta] = inp.type==='number' ? parseFloat(inp.value||0) : inp.value;
+        markDirty(); renderTopbar();
+      });
+    });
+  }
+
+  /* ---------- PERFIL ---------- */
+  function renderPerfil(){
+    const m = CURRENT.meta;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('📜 Perfil', 'Identidade, origem e personalidade do personagem.') + `
+    <div class="grid" style="grid-template-columns:1fr 2fr; gap:16px;">
+      <div class="card">
+        <h3>Retrato</h3>
+        <div style="text-align:center;">
+          <div style="width:150px;height:150px;border-radius:12px;border:2px solid var(--gold-dim);background:${m.portrait?`url(${m.portrait}) center/cover no-repeat`:'var(--void-2)'};margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--gold-dim);">${m.portrait?'':'👤'}</div>
+          ${field('URL da imagem', `<input type="text" data-meta="portrait" value="${m.portrait||''}" placeholder="https://...">`)}
+        </div>
+      </div>
+      <div class="card">
+        <h3>Identidade</h3>
+        <div class="row">
+          ${field('Nome', `<input data-meta="name" value="${m.name||''}">`)}
+          ${field('Título', `<input data-meta="title" value="${m.title||''}">`)}
+        </div>
+        <div class="row">
+          ${field('Classe', `<input data-meta="classe" value="${m.classe||''}">`)}
+          ${field('Subclasse', `<input data-meta="subclasse" value="${m.subclasse||''}">`)}
+          ${field('Raça', `<input data-meta="raca" value="${m.raca||''}">`)}
+        </div>
+        <div class="row">
+          ${field('Nível', `<input type="number" min="1" max="20" data-meta="level" value="${m.level||1}">`)}
+          ${field('Experiência', `<input type="number" data-meta="xp" value="${m.xp||0}">`)}
+          ${field('Tendência', `<input data-meta="tendencia" value="${m.tendencia||''}">`)}
+        </div>
+      </div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); margin-top:16px;">
+      <div class="card"><h3>Origem</h3>
+        ${field('Origem', `<input data-meta="origem" value="${m.origem||''}">`)}
+        ${field('Reino de Origem', `<input data-meta="reino" value="${m.reino||''}">`)}
+        ${field('Idiomas', `<input data-meta="idiomas" value="${m.idiomas||''}">`)}
+        ${field('Divindade', `<input data-meta="divindade" value="${m.divindade||''}">`)}
+      </div>
+      <div class="card"><h3>Físico</h3>
+        ${field('Idade', `<input data-meta="idade" value="${m.idade||''}">`)}
+        ${field('Sexo', `<input data-meta="sexo" value="${m.sexo||''}">`)}
+        ${field('Altura', `<input data-meta="altura" value="${m.altura||''}">`)}
+        ${field('Peso', `<input data-meta="peso" value="${m.peso||''}">`)}
+      </div>
+      <div class="card"><h3>Campanha</h3>
+        ${field('Jogador', `<input data-meta="jogador" value="${m.jogador||''}">`)}
+        ${field('Mestre', `<input data-meta="mestre" value="${m.mestre||''}">`)}
+        ${field('Campanha', `<input data-meta="campanha" value="${m.campanha||''}">`)}
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>Personalidade</h3>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+        ${field('Personalidade', `<textarea rows="3" data-meta="personalidade">${m.personalidade||''}</textarea>`)}
+        ${field('Ideais', `<textarea rows="3" data-meta="ideais">${m.ideais||''}</textarea>`)}
+        ${field('Vínculos', `<textarea rows="3" data-meta="vinculos">${m.vinculos||''}</textarea>`)}
+        ${field('Defeitos', `<textarea rows="3" data-meta="defeitos">${m.defeitos||''}</textarea>`)}
+      </div>
+      ${field('História', `<textarea rows="5" data-meta="historia">${m.historia||''}</textarea>`)}
+      ${field('Observações Gerais', `<textarea rows="3" data-meta="observacoes">${m.observacoes||''}</textarea>`)}
+    </div>`;
+    bindMetaInputs(el);
+    return el;
+  }
+
+  /* ---------- ATRIBUTOS ---------- */
+  function renderAtributos(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('💪 Atributos', 'Bônus de Proficiência: ' + Calc.fmt(Calc.profBonus(c)) + (c.proficiency.auto?' (automático)':' (manual)'));
+    const grid = document.createElement('div');
+    grid.className = 'attr-grid';
+    Object.keys(ATTR_NAMES).forEach(key=>{
+      const a = c.attributes[key];
+      const card = document.createElement('div');
+      card.className = 'card attr-card';
+      card.innerHTML = `
+        <div class="aname">${ATTR_NAMES[key]}</div>
+        <div class="amod">${Calc.fmt(Calc.mod(a))}</div>
+        <div class="atotal">Total: ${Calc.total(a)}</div>
+        <div class="ainputs">
+          <div><label>Base</label><input type="number" data-attr="${key}" data-f="base" value="${a.base}"></div>
+          <div><label>Temp.</label><input type="number" data-attr="${key}" data-f="temp" value="${a.temp}"></div>
+          <div><label>Perm.</label><input type="number" data-attr="${key}" data-f="perm" value="${a.perm}"></div>
+        </div>
+        <button class="btn roll-btn small" data-roll-attr="${key}">🎲 Rolar Teste</button>
+      `;
+      grid.appendChild(card);
+    });
+    el.appendChild(grid);
+
+    const pcard = document.createElement('div');
+    pcard.className = 'card';
+    pcard.style.marginTop='16px';
+    pcard.innerHTML = `<h3>Proficiência</h3>
+      <label><input type="checkbox" id="profAuto" ${c.proficiency.auto?'checked':''}> Calcular automaticamente pelo nível</label>
+      <div class="field" style="max-width:160px; margin-top:8px;"><label>Bônus manual</label><input type="number" id="profManual" value="${c.proficiency.manual}" ${c.proficiency.auto?'disabled':''}></div>`;
+    el.appendChild(pcard);
+
+    setTimeout(()=>{
+      el.querySelectorAll('input[data-attr]').forEach(inp=>{
+        inp.addEventListener('input', ()=>{
+          CURRENT.attributes[inp.dataset.attr][inp.dataset.f] = parseInt(inp.value||0);
+          markDirty(); render();
+        });
+      });
+      el.querySelectorAll('[data-roll-attr]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const key = b.dataset.rollAttr;
+          const r = Dice.parseAndRoll('1d20');
+          const total = r.total + Calc.mod(CURRENT.attributes[key]);
+          toast(`Teste de ${ATTR_NAMES[key]}`, total, `d20(${r.total}) ${Calc.fmt(Calc.mod(CURRENT.attributes[key]))}`);
+          Hist.add(CURRENT,'Teste de Atributo', `${ATTR_NAMES[key]}: ${total}`, `d20=${r.total} mod=${Calc.fmt(Calc.mod(CURRENT.attributes[key]))}`);
+          markDirty();
+        });
+      });
+      document.getElementById('profAuto').addEventListener('change', (e)=>{ CURRENT.proficiency.auto = e.target.checked; markDirty(); render(); });
+      const pm = document.getElementById('profManual');
+      if(pm) pm.addEventListener('input', (e)=>{ CURRENT.proficiency.manual = parseInt(e.target.value||0); markDirty(); render(); });
+    },0);
+
+    return el;
+  }
+
+  /* ---------- COMBATE ---------- */
+  function renderCombate(){
+    const c = CURRENT;
+    const es = Calc.esquiva(c);
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('⚔️ Combate', 'Esquiva, vida, reações e a calculadora de dano de Varagon.');
+
+    const top = document.createElement('div');
+    top.className = 'grid';
+    top.style.gridTemplateColumns = '1fr 1.4fr';
+    top.innerHTML = `
+      <div class="card">
+        <h3>Esquiva</h3>
+        <div class="esquiva-hero">
+          <div class="esquiva-shield"><div class="num">${es.value}</div><div class="lbl">Esquiva</div></div>
+        </div>
+        <div class="esquiva-formula">8 + Proficiência(${Calc.fmt(es.pb)}) + Destreza(${Calc.fmt(es.desMod)}) + Armadura(${Calc.fmt(es.armorDodge)}) + Reação(${Calc.fmt(es.reactionBonus)}) + Outros(${Calc.fmt(es.other)})</div>
+        <div class="field" style="max-width:140px;margin:10px auto 0;"><label>Outros Bônus</label><input type="number" id="esquivaOther" value="${c.esquivaOther||0}"></div>
+      </div>
+      <div class="card">
+        <h3>Vida</h3>
+        <div class="row">
+          <div class="field"><label>Vida Máxima</label><input type="number" id="hpMax" value="${c.hp.max}"></div>
+          <div class="field"><label>Vida Atual</label><input type="number" id="hpCurrent" value="${c.hp.current}"></div>
+          <div class="field"><label>Vida Temporária</label><input type="number" id="hpTemp" value="${c.hp.temp}"></div>
+          <div class="field"><label>Ferimentos Permanentes</label><input type="number" id="hpPerm" value="${c.hp.permWounds}"></div>
+        </div>
+        <div class="row">
+          <button class="btn small" id="btnHeal">+ Curar 1d8</button>
+          <button class="btn small danger" id="btnDamageQuick">− Dano rápido</button>
+        </div>
+        <h3 style="margin-top:14px;">Dados de Vida</h3>
+        <div class="row">
+          <div class="field"><label>Máximo</label><input type="number" id="hdMax" value="${c.hitDice.max}"></div>
+          <div class="field"><label>Atual</label><input type="number" id="hdCurrent" value="${c.hitDice.current}"></div>
+          <div class="field"><label>Dado</label><input type="text" id="hdDie" value="${c.hitDice.die}"></div>
+        </div>
+        <button class="btn small" id="btnSpendHd">Gastar Dado de Vida</button>
+      </div>`;
+    el.appendChild(top);
+
+    const reactCard = document.createElement('div');
+    reactCard.className = 'card';
+    reactCard.style.marginTop='16px';
+    reactCard.innerHTML = `
+      <h3>Reação — ${c.reaction.used?'<span style="color:var(--blood-bright)">Utilizada</span>':'<span style="color:var(--forest-bright)">Disponível</span>'}</h3>
+      <div class="row">
+        <button class="btn small" id="btnReactEsquiva" ${c.reaction.used?'disabled':''}>Esquiva (+2 Esquiva vs 1 ataque)</button>
+        <button class="btn small" id="btnReactProtecao" ${c.reaction.used?'disabled':''}>Proteção (+5 RD vs 1 ataque)</button>
+        <button class="btn small" id="btnReactContra">Contra-ataque (após erro/imunidade)</button>
+        <button class="btn small ghost" id="btnReactReset">Resetar Reação (novo turno)</button>
+      </div>
+    `;
+    el.appendChild(reactCard);
+
+    const eqArmors = Calc.equippedArmors(c);
+    const eqWeapons = c.weapons.filter(w=>w.equipped);
+    const contrib = Calc.armorContribution(c);
+    const gearCard = document.createElement('div');
+    gearCard.className = 'card';
+    gearCard.style.marginTop = '16px';
+    gearCard.innerHTML = `
+      <h3>🎽 Equipamento Ativo</h3>
+      <p class="section-sub" style="margin:-4px 0 10px;">Somando automaticamente <b style="color:var(--gold-bright)">+${contrib.dodge} Esquiva</b> e <b style="color:var(--gold-bright)">RD ${contrib.rd}</b> das peças abaixo.</p>
+      <div class="row" style="flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+        ${eqArmors.map(a=>`<span class="pill">🛡️ ${a.name} (${a.slot})</span>`).join('') || '<span class="muted">Nenhuma armadura equipada</span>'}
+      </div>
+      <div class="row" style="flex-wrap:wrap; gap:6px;">
+        ${eqWeapons.map(w=>`<span class="pill">🗡️ ${w.name} (${w.slot})</span>`).join('') || '<span class="muted">Nenhuma arma equipada</span>'}
+      </div>
+    `;
+    el.appendChild(gearCard);
+
+    // Damage calculator
+    const dmgTypeOptions = Object.keys(c.damageTypes).map(t=>`<option value="${t}">${t}</option>`).join('');
+    const calcCard = document.createElement('div');
+    calcCard.className = 'card';
+    calcCard.style.marginTop='16px';
+    calcCard.innerHTML = `
+      <h3>Calculadora de Dano (Ordem Varagon)</h3>
+      <div class="row">
+        <div class="field"><label>Dano Bruto</label><input type="number" id="calcDmgValue" value="10"></div>
+        <div class="field"><label>Tipo de Dano</label><select id="calcDmgType">${dmgTypeOptions}</select></div>
+        <div class="field"><label>Crítico?</label><select id="calcDmgCrit"><option value="0">Não</option><option value="1">Sim</option></select></div>
+        <div class="field"><label>Fonte</label><input type="text" id="calcDmgSource" placeholder="ex: Goblin"></div>
+      </div>
+      <button class="btn" id="btnApplyDamage">Aplicar Dano</button>
+      <div id="calcResultBox" style="margin-top:12px;"></div>
+    `;
+    el.appendChild(calcCard);
+
+    setTimeout(()=>{
+      document.getElementById('esquivaOther').addEventListener('input', e=>{ c.esquivaOther = parseInt(e.target.value||0); markDirty(); render(); });
+      document.getElementById('hpMax').addEventListener('input', e=>{ c.hp.max = parseInt(e.target.value||0); markDirty(); renderTopbar(); renderResourcePanel(); });
+      document.getElementById('hpCurrent').addEventListener('input', e=>{ c.hp.current = parseInt(e.target.value||0); markDirty(); renderTopbar(); renderResourcePanel(); });
+      document.getElementById('hpTemp').addEventListener('input', e=>{ c.hp.temp = parseInt(e.target.value||0); markDirty(); renderResourcePanel(); });
+      document.getElementById('hpPerm').addEventListener('input', e=>{ c.hp.permWounds = parseInt(e.target.value||0); markDirty(); });
+      document.getElementById('hdMax').addEventListener('input', e=>{ c.hitDice.max = parseInt(e.target.value||0); markDirty(); renderResourcePanel(); });
+      document.getElementById('hdCurrent').addEventListener('input', e=>{ c.hitDice.current = parseInt(e.target.value||0); markDirty(); renderResourcePanel(); });
+      document.getElementById('hdDie').addEventListener('input', e=>{ c.hitDice.die = e.target.value; markDirty(); });
+
+      document.getElementById('btnHeal').addEventListener('click', ()=>{
+        const r = Dice.parseAndRoll('1d8');
+        c.hp.current = Math.min(c.hp.max, c.hp.current + r.total);
+        toast('Cura', '+'+r.total, 'Vida atual: '+c.hp.current);
+        Hist.add(c,'Cura', `+${r.total} de vida`, `Vida atual: ${c.hp.current}/${c.hp.max}`);
+        markDirty(); render();
+      });
+      document.getElementById('btnDamageQuick').addEventListener('click', ()=>{
+        const v = prompt('Dano bruto a aplicar diretamente à Vida (sem pipeline):', '5');
+        if(v===null) return;
+        const n = parseInt(v)||0;
+        c.hp.current = Math.max(0, c.hp.current-n);
+        Hist.add(c,'Dano direto', `-${n} de vida`, `Vida atual: ${c.hp.current}/${c.hp.max}`);
+        markDirty(); render();
+      });
+      document.getElementById('btnSpendHd').addEventListener('click', ()=>{
+        if(c.hitDice.current<=0){ toast('Dados de Vida','0','Nenhum dado disponível'); return; }
+        const sides = parseInt((c.hitDice.die.match(/\d+/)||['8'])[0]);
+        const r = Dice.parseAndRoll(`1d${sides}`);
+        const conMod = Calc.mod(c.attributes.con);
+        const healed = Math.max(0, r.total+conMod);
+        c.hitDice.current -= 1;
+        c.hp.current = Math.min(c.hp.max, c.hp.current+healed);
+        Hist.add(c,'Dado de Vida gasto', `Curou ${healed}`, `d${sides}=${r.total} + CON(${Calc.fmt(conMod)})`);
+        toast('Dado de Vida', '+'+healed, `d${sides}(${r.total}) + CON`);
+        markDirty(); render();
+      });
+      document.getElementById('btnReactEsquiva').addEventListener('click', ()=>{
+        c.reaction.used = true; c.reaction.esquivaBonusActive = true;
+        Hist.add(c,'Reação','Esquiva usada','+2 Esquiva contra próximo ataque');
+        markDirty(); render();
+      });
+      document.getElementById('btnReactProtecao').addEventListener('click', ()=>{
+        c.reaction.used = true; c.reaction.protecaoRdActive = true;
+        Hist.add(c,'Reação','Proteção usada','+5 RD contra próximo ataque');
+        markDirty(); render();
+      });
+      document.getElementById('btnReactContra').addEventListener('click', ()=>{
+        Hist.add(c,'Reação','Contra-ataque usado','Ataque corpo a corpo imediato concedido');
+        toast('Contra-ataque','!','Realize um ataque corpo a corpo imediato');
+        markDirty();
+      });
+      document.getElementById('btnReactReset').addEventListener('click', ()=>{
+        c.reaction.used=false; c.reaction.esquivaBonusActive=false; c.reaction.protecaoRdActive=false;
+        markDirty(); render();
+      });
+
+      document.getElementById('btnApplyDamage').addEventListener('click', ()=>{
+        const raw = parseInt(document.getElementById('calcDmgValue').value||0);
+        const type = document.getElementById('calcDmgType').value;
+        const crit = document.getElementById('calcDmgCrit').value==='1';
+        const source = document.getElementById('calcDmgSource').value||'—';
+        let finalRaw = raw;
+        if(crit) finalRaw = raw*2;
+        const res = Calc.applyDamagePipeline(c, finalRaw, type, crit);
+        const box = document.getElementById('calcResultBox');
+        box.innerHTML = `<div class="card" style="background:var(--void-2);">
+          <div class="muted" style="margin-bottom:6px;">Fonte: ${source} ${crit?'· <b style="color:var(--blood-bright)">CRÍTICO</b>':''}</div>
+          ${res.steps.map(s=>`<div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.85rem;padding:2px 0;border-bottom:1px dashed var(--leather-edge);"><span>${s.label}${s.note?` <span class="muted">(${s.note})</span>`:''}</span><span>${s.value}</span></div>`).join('')}
+        </div>`;
+        Hist.add(c,'Dano recebido', `${source}: ${res.hpDamage} à vida, ${res.armorAbsorbed} à armadura`, res.steps.map(s=>`${s.label}=${s.value}`).join(' | '));
+        markDirty(); renderTopbar(); renderResourcePanel();
+      });
+    },0);
+
+    return el;
+  }
+
+  /* ---------- ARMAS ---------- */
+  function weaponCard(w){
+    const div = document.createElement('div');
+    div.className = 'card item-card' + (w.equipped ? ' equipped-card' : '') + (w.collapsed ? ' collapsed' : '');
+    div.innerHTML = `
+      <div class="ihead" data-collapse-toggle style="cursor:pointer;" title="Clique para minimizar/expandir"><div class="iname"><span class="chevron">▾</span> ${w.name||'Nova Arma'}</div><div class="pill">${w.category||'—'}</div></div>
+      <div class="collapsed-summary">${w.damageDice||'—'} ${w.damageType||''} ${w.equipped?`· Equipada (${w.slot})`:''}</div>
+      ${w.equipped ? `<span class="equipped-badge">✓ Equipada — ${w.slot}</span>` : ''}
+      <div class="card-body">
+      <div class="row" style="margin-top:8px;">
+        <div class="field"><label>Nome</label><input data-w="name" value="${w.name||''}"></div>
+        <div class="field"><label>Categoria</label><select data-w="category">${['Simples','Marcial','Personalizada'].map(o=>`<option ${w.category===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Tipo</label><select data-w="type">${['Corpo a Corpo','Distância','Arremesso','Improvisada'].map(o=>`<option ${w.type===o?'selected':''}>${o}</option>`).join('')}</select></div>
+        <div class="field"><label>Tipo de Dano</label><select data-w="damageType">${['Cortante','Perfurante','Contundente','Personalizado'].map(o=>`<option ${w.damageType===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Dados de Dano</label><input data-w="damageDice" value="${w.damageDice||'1d8'}"></div>
+        <div class="field"><label>Modificador</label><select data-w="modAttr">${[['for','Força'],['des','Destreza'],['custom','Personalizado']].map(([k,l])=>`<option value="${k}" ${w.modAttr===k?'selected':''}>${l}</option>`).join('')}</select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Bônus Mágico</label><input type="number" data-w="magicBonus" value="${w.magicBonus||0}"></div>
+        <div class="field"><label>Bônus Temp.</label><input type="number" data-w="tempBonus" value="${w.tempBonus||0}"></div>
+        <div class="field"><label>Proficiente?</label><select data-w="proficient"><option value="1" ${w.proficient!==false?'selected':''}>Sim</option><option value="0" ${w.proficient===false?'selected':''}>Não</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Alcance Normal</label><input data-w="rangeNormal" value="${w.rangeNormal||''}"></div>
+        <div class="field"><label>Alcance Máximo</label><input data-w="rangeMax" value="${w.rangeMax||''}"></div>
+        <div class="field"><label>Peso</label><input type="number" data-w="weight" value="${w.weight||0}"></div>
+        <div class="field"><label>Valor</label><input type="number" data-w="value" value="${w.value||0}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Material</label><input data-w="material" value="${w.material||''}"></div>
+        <div class="field"><label>Raridade</label><input data-w="rarity" value="${w.rarity||''}"></div>
+        <div class="field"><label>Munição?</label><select data-w="needsAmmo"><option value="0" ${!w.needsAmmo?'selected':''}>Não</option><option value="1" ${w.needsAmmo?'selected':''}>Sim</option></select></div>
+        <div class="field"><label>Qtd. Munição</label><input type="number" data-w="ammoQty" value="${w.ammoQty||0}"></div>
+      </div>
+      <div class="field"><label>Propriedades</label><input data-w="properties" value="${w.properties||''}"></div>
+      <div class="field"><label>Maestria</label><input data-w="mastery" value="${w.mastery||''}"></div>
+      <div class="field"><label>Descrição / Observações</label><textarea rows="2" data-w="description">${w.description||''}</textarea></div>
+      <div class="field"><label>Slot ao Equipar</label><select data-w="slot">${['Principal','Secundária','Reserva'].map(o=>`<option ${w.slot===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      </div>
+      <div class="actions">
+        <button class="btn small ${w.equipped?'secondary':''}" data-act="toggleEquip">${w.equipped?'✖ Desequipar':'🛡️ Equipar'}</button>
+        <button class="btn small" data-act="attack">⚔️ Atacar</button>
+        <button class="btn small" data-act="damage">💥 Dano</button>
+        <button class="btn small secondary" data-act="crit">✴️ Crítico</button>
+        <button class="btn small ghost" data-act="dup">⧉ Duplicar</button>
+        <button class="btn small danger" data-act="del">🗑️ Remover</button>
+      </div>
+    `;
+    div.querySelector('[data-collapse-toggle]').addEventListener('click', ()=>{
+      w.collapsed = !w.collapsed;
+      markDirty(); render();
+    });
+    div.querySelectorAll('[data-w]').forEach(inp=>{
+      const evt = inp.tagName==='SELECT' ? 'change' : 'input';
+      inp.addEventListener(evt, ()=>{
+        let v = inp.value;
+        if(['magicBonus','tempBonus','weight','value','ammoQty'].includes(inp.dataset.w)) v = parseFloat(v||0);
+        if(inp.dataset.w==='proficient') v = v==='1';
+        if(inp.dataset.w==='needsAmmo') v = v==='1';
+        w[inp.dataset.w] = v;
+        markDirty();
+        if(inp.dataset.w==='name'||inp.dataset.w==='category') div.querySelector('.iname').textContent = w.name||'Nova Arma';
+        if(inp.dataset.w==='slot'){
+          if(w.equipped && (w.slot==='Principal' || w.slot==='Secundária')){
+            CURRENT.weapons.forEach(other=>{ if(other.id!==w.id && other.slot===w.slot) other.equipped=false; });
+          }
+          render();
+        }
+      });
+    });
+    div.querySelector('[data-act="toggleEquip"]').addEventListener('click', ()=>{
+      if(!w.equipped){
+        // Principal e Secundária são únicos; Reserva permite múltiplas armas simultâneas
+        if(w.slot==='Principal' || w.slot==='Secundária'){
+          CURRENT.weapons.forEach(other=>{ if(other.id!==w.id && other.slot===w.slot) other.equipped=false; });
+        }
+        w.equipped = true;
+        Hist.add(CURRENT,'Arma equipada', `${w.name} (${w.slot})`, '');
+      } else {
+        w.equipped = false;
+        Hist.add(CURRENT,'Arma desequipada', w.name, '');
+      }
+      markDirty(); render();
+    });
+    div.querySelector('[data-act="attack"]').addEventListener('click', ()=>{
+      const r = Dice.parseAndRoll('1d20');
+      const bonus = Calc.weaponAttackBonus(CURRENT, w);
+      const total = r.total+bonus;
+      toast(`Ataque: ${w.name}`, total, `d20(${r.total}) ${Calc.fmt(bonus)}`);
+      Hist.add(CURRENT,'Ataque', `${w.name}: ${total}`, `d20=${r.total} bônus=${Calc.fmt(bonus)}`);
+      markDirty();
+    });
+    div.querySelector('[data-act="damage"]').addEventListener('click', ()=>{
+      const attrMod = Calc.weaponAttrMod(CURRENT, w);
+      const expr = `${w.damageDice||'1d6'}+${attrMod+(w.magicBonus||0)+(w.tempBonus||0)}`;
+      const r = Dice.parseAndRoll(expr);
+      toast(`Dano: ${w.name}`, r.total, `${w.damageDice} ${Calc.fmt(attrMod)} mágico${Calc.fmt(w.magicBonus||0)}`);
+      Hist.add(CURRENT,'Dano causado', `${w.name}: ${r.total}`, r.detail);
+      markDirty();
+    });
+    div.querySelector('[data-act="crit"]').addEventListener('click', ()=>{
+      const attrMod = Calc.weaponAttrMod(CURRENT, w);
+      const diceMatch = (w.damageDice||'1d6').match(/(\d*)d(\d+)/i);
+      const count = diceMatch && diceMatch[1] ? parseInt(diceMatch[1]) : 1;
+      const sides = diceMatch ? parseInt(diceMatch[2]) : 6;
+      const critExpr = `${count*2}d${sides}+${attrMod+(w.magicBonus||0)+(w.tempBonus||0)}`;
+      const r = Dice.parseAndRoll(critExpr);
+      toast(`CRÍTICO: ${w.name}`, r.total, `Dados dobrados (${critExpr})`);
+      Hist.add(CURRENT,'Dano Crítico', `${w.name}: ${r.total}`, r.detail);
+      markDirty();
+    });
+    div.querySelector('[data-act="dup"]').addEventListener('click', ()=>{
+      CURRENT.weapons.push(JSON.parse(JSON.stringify({...w, id:Model.uid('wpn'), equipped:false})));
+      markDirty(); render();
+    });
+    div.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+      CURRENT.weapons = CURRENT.weapons.filter(x=>x.id!==w.id);
+      markDirty(); render();
+    });
+    return div;
+  }
+  function renderArmas(){
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('🗡️ Armas', 'Equipe várias armas ao mesmo tempo (Principal, Secundária e Reservas) — cada uma com rolagem automática de ataque, dano e crítico.');
+    const addBtn = document.createElement('button');
+    addBtn.className='btn'; addBtn.textContent='+ Nova Arma'; addBtn.style.marginBottom='14px';
+    addBtn.addEventListener('click', ()=>{
+      CURRENT.weapons.push({id:Model.uid('wpn'), name:'Nova Arma', category:'Simples', type:'Corpo a Corpo', damageType:'Cortante', damageDice:'1d8', modAttr:'for', magicBonus:0, tempBonus:0, proficient:true, rangeNormal:'', rangeMax:'', weight:0, value:0, material:'', rarity:'', needsAmmo:false, ammoQty:0, properties:'', mastery:'', description:'', equipped:false, slot:'Nenhum', collapsed:false});
+      markDirty(); render();
+    });
+    el.appendChild(addBtn);
+
+    const equipped = CURRENT.weapons.filter(w=>w.equipped);
+    const backpack = CURRENT.weapons.filter(w=>!w.equipped);
+
+    el.insertAdjacentHTML('beforeend', `<h3 class="display" style="color:var(--gold-bright); margin:8px 0 10px; display:flex; align-items:center; gap:8px;">⚔️ Equipadas (${equipped.length})</h3>`);
+    const gridEq = document.createElement('div'); gridEq.className='item-grid'; gridEq.style.marginBottom='22px';
+    if(equipped.length===0){ gridEq.innerHTML = '<p class="muted" style="margin:0;">Nenhuma arma equipada.</p>'; }
+    else equipped.forEach(w=>gridEq.appendChild(weaponCard(w)));
+    el.appendChild(gridEq);
+
+    el.insertAdjacentHTML('beforeend', `<h3 class="display" style="color:var(--gold-bright); margin:8px 0 10px; display:flex; align-items:center; gap:8px;">🎒 Na Mochila (${backpack.length})</h3>`);
+    const gridBag = document.createElement('div'); gridBag.className='item-grid';
+    if(backpack.length===0){ gridBag.innerHTML = '<p class="muted" style="margin:0;">Nenhuma arma na mochila.</p>'; }
+    else backpack.forEach(w=>gridBag.appendChild(weaponCard(w)));
+    el.appendChild(gridBag);
+
+    return el;
+  }
+
+  /* ---------- ARMADURAS ---------- */
+  function armorCard(a){
+    const st = Calc.armorStateInfo(a);
+    const div = document.createElement('div');
+    div.className='card item-card' + (a.equipped ? ' equipped-card' : '') + (a.collapsed ? ' collapsed' : '');
+    div.innerHTML = `
+      <div class="ihead" data-collapse-toggle style="cursor:pointer;" title="Clique para minimizar/expandir"><div class="iname"><span class="chevron">▾</span> ${a.name||'Nova Armadura'}</div><span class="armor-state-badge ${st.key}">${st.label} (${st.pct}%)</span></div>
+      <div class="collapsed-summary">RD ${a.rd||0} · Esquiva +${a.dodgeBonus||0} · Vida ${a.hpCurrent}/${a.hpMax}${a.equipped?` · Equipada (${a.slot})`:''}</div>
+      ${a.equipped ? `<span class="equipped-badge">✓ Equipada — ${a.slot}</span>` : ''}
+      <div class="card-body">
+      <div class="row" style="margin-top:8px;">
+        <div class="field"><label>Nome</label><input data-a="name" value="${a.name||''}"></div>
+        <div class="field"><label>Categoria</label><select data-a="category">${['Leve','Média','Pesada'].map(o=>`<option ${a.category===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Slot Defensivo</label><select data-a="slot">${['Principal','Escudo','Elmo','Braceletes','Outro'].map(o=>`<option ${a.slot===o?'selected':''}>${o}</option>`).join('')}</select></div>
+        <div class="field"><label>Material</label><input data-a="material" value="${a.material||''}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Peso</label><input type="number" data-a="weight" value="${a.weight||0}"></div>
+        <div class="field"><label>Preço</label><input type="number" data-a="price" value="${a.price||0}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Bônus de Esquiva</label><input type="number" data-a="dodgeBonus" value="${a.dodgeBonus||0}"></div>
+        <div class="field"><label>Redução de Dano (RD)</label><input type="number" data-a="rd" value="${a.rd||0}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Vida Máx. Armadura</label><input type="number" data-a="hpMax" value="${a.hpMax||0}"></div>
+        <div class="field"><label>Vida Atual Armadura</label><input type="number" data-a="hpCurrent" value="${a.hpCurrent||0}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Raridade</label><input data-a="rarity" value="${a.rarity||''}"></div>
+        <div class="field"><label>Necessita Proficiência?</label><select data-a="needsProficiency"><option value="0" ${!a.needsProficiency?'selected':''}>Não</option><option value="1" ${a.needsProficiency?'selected':''}>Sim</option></select></div>
+      </div>
+      <div class="field"><label>Resistência Especial</label><input data-a="specialResistance" value="${a.specialResistance||''}"></div>
+      <div class="field"><label>Fraqueza Especial</label><input data-a="specialWeakness" value="${a.specialWeakness||''}"></div>
+      <div class="field"><label>Encantamentos</label><input data-a="enchantments" value="${a.enchantments||''}"></div>
+      <div class="field"><label>Descrição</label><textarea rows="2" data-a="description">${a.description||''}</textarea></div>
+      </div>
+      <div class="actions">
+        <button class="btn small ${a.equipped?'secondary':''}" data-act="toggleEquip">${a.equipped?'✖ Desequipar':'🛡️ Equipar'}</button>
+        <button class="btn small" data-act="repair">🔧 Reparar Totalmente</button>
+        <button class="btn small ghost" data-act="dup">⧉ Duplicar</button>
+        <button class="btn small danger" data-act="del">🗑️ Remover</button>
+      </div>
+    `;
+    div.querySelector('[data-collapse-toggle]').addEventListener('click', ()=>{
+      a.collapsed = !a.collapsed;
+      markDirty(); render();
+    });
+    div.querySelectorAll('[data-a]').forEach(inp=>{
+      const evt = inp.tagName==='SELECT'||inp.type==='checkbox' ? 'change' : 'input';
+      inp.addEventListener(evt, ()=>{
+        let v = inp.type==='checkbox' ? inp.checked : inp.value;
+        if(['weight','price','dodgeBonus','rd','hpMax','hpCurrent'].includes(inp.dataset.a)) v = parseFloat(v||0);
+        if(inp.dataset.a==='needsProficiency') v = v==='1';
+        a[inp.dataset.a] = v;
+        markDirty();
+        if(inp.dataset.a==='slot'){
+          // Trocar o slot de uma peça já equipada pode gerar conflito com outra peça do mesmo slot; refaz a checagem
+          if(a.equipped && a.slot!=='Outro'){
+            CURRENT.armors.forEach(other=>{ if(other.id!==a.id && other.slot===a.slot) other.equipped=false; });
+          }
+          render();
+        } else if(inp.dataset.a==='name'){
+          div.querySelector('.iname').textContent = a.name || 'Nova Armadura';
+        }
+      });
+    });
+    div.querySelector('[data-act="toggleEquip"]').addEventListener('click', ()=>{
+      if(!a.equipped){
+        // Cada slot (Principal/Escudo/Elmo/Braceletes) admite só uma peça; "Outro" permite múltiplas ao mesmo tempo
+        if(a.slot!=='Outro'){
+          CURRENT.armors.forEach(other=>{ if(other.id!==a.id && other.slot===a.slot) other.equipped=false; });
+        }
+        a.equipped = true;
+        Hist.add(CURRENT,'Armadura equipada', `${a.name} (${a.slot})`, '');
+      } else {
+        a.equipped = false;
+        Hist.add(CURRENT,'Armadura desequipada', a.name, '');
+      }
+      markDirty(); render();
+    });
+    div.querySelector('[data-act="repair"]').addEventListener('click', ()=>{ a.hpCurrent=a.hpMax; markDirty(); render(); });
+    div.querySelector('[data-act="dup"]').addEventListener('click', ()=>{ CURRENT.armors.push({...a,id:Model.uid('arm'),equipped:false}); markDirty(); render(); });
+    div.querySelector('[data-act="del"]').addEventListener('click', ()=>{ CURRENT.armors = CURRENT.armors.filter(x=>x.id!==a.id); markDirty(); render(); });
+    return div;
+  }
+  function renderArmaduras(){
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('🛡️ Armaduras', 'Equipe várias peças defensivas ao mesmo tempo (armadura principal, escudo, elmo, braceletes...) — RD e Esquiva somam automaticamente.');
+    const addBtn = document.createElement('button');
+    addBtn.className='btn'; addBtn.textContent='+ Nova Armadura'; addBtn.style.marginBottom='14px';
+    addBtn.addEventListener('click', ()=>{
+      CURRENT.armors.push({id:Model.uid('arm'), name:'Nova Armadura', category:'Leve', material:'', weight:0, price:0, description:'', dodgeBonus:0, rd:0, hpMax:10, hpCurrent:10, rarity:'', needsProficiency:false, specialResistance:'', specialWeakness:'', enchantments:'', equipped:false, slot:'Principal', collapsed:false});
+      markDirty(); render();
+    });
+    el.appendChild(addBtn);
+
+    const contrib = Calc.armorContribution(CURRENT);
+    el.insertAdjacentHTML('beforeend', `<p class="section-sub" style="margin-top:-6px;">Total equipado agora: <b style="color:var(--gold-bright)">+${contrib.dodge} Esquiva</b> · <b style="color:var(--gold-bright)">RD ${contrib.rd}</b></p>`);
+
+    const equipped = CURRENT.armors.filter(a=>a.equipped);
+    const backpack = CURRENT.armors.filter(a=>!a.equipped);
+
+    el.insertAdjacentHTML('beforeend', `<h3 class="display" style="color:var(--gold-bright); margin:8px 0 10px; display:flex; align-items:center; gap:8px;">🛡️ Equipadas (${equipped.length})</h3>`);
+    const gridEq = document.createElement('div'); gridEq.className='item-grid'; gridEq.style.marginBottom='22px';
+    if(equipped.length===0){ gridEq.innerHTML = '<p class="muted" style="margin:0;">Nenhuma armadura equipada.</p>'; }
+    else equipped.forEach(a=>gridEq.appendChild(armorCard(a)));
+    el.appendChild(gridEq);
+
+    el.insertAdjacentHTML('beforeend', `<h3 class="display" style="color:var(--gold-bright); margin:8px 0 10px; display:flex; align-items:center; gap:8px;">🎒 Na Mochila (${backpack.length})</h3>`);
+    const gridBag = document.createElement('div'); gridBag.className='item-grid';
+    if(backpack.length===0){ gridBag.innerHTML = '<p class="muted" style="margin:0;">Nenhuma armadura na mochila.</p>'; }
+    else backpack.forEach(a=>gridBag.appendChild(armorCard(a)));
+    el.appendChild(gridBag);
+
+    return el;
+  }
+
+  /* ---------- EQUIPAMENTOS ---------- */
+  const EQUIP_SLOTS = [['capacete','Capacete'],['peitoral','Peitoral'],['ombreiras','Ombreiras'],['bracadeiras','Braçadeiras'],['luvas','Luvas'],['cinto','Cinto'],['calcas','Calças'],['botas','Botas'],['anel1','Anel 1'],['anel2','Anel 2'],['amuleto','Amuleto'],['colar','Colar'],['manto','Manto'],['escudo','Escudo'],['armaPrincipal','Arma Principal'],['armaSecundaria','Arma Secundária'],['armaReserva','Arma Reserva'],['itemEspecial','Item Especial']];
+  function renderEquipamentos(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('🎽 Equipamentos', 'Itens equipados em cada slot do personagem — descreva os bônus que cada um concede.');
+    const grid = document.createElement('div');
+    grid.className='item-grid';
+    EQUIP_SLOTS.forEach(([key,label])=>{
+      const card = document.createElement('div');
+      card.className='card';
+      card.innerHTML = `<h3>${label}</h3><textarea rows="2" placeholder="Nome do item e bônus (atributos, resistências, RD, esquiva, etc.)" data-eq="${key}">${c.equipment[key]||''}</textarea>`;
+      card.querySelector('textarea').addEventListener('input', e=>{ c.equipment[key]=e.target.value; markDirty(); });
+      grid.appendChild(card);
+    });
+    el.appendChild(grid);
+    return el;
+  }
+
+  /* ---------- INVENTÁRIO ---------- */
+  function renderInventario(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    const w = Calc.carryWeight(c);
+    const th = Calc.carryThresholds(c);
+    let loadLabel='Leve', loadColor='var(--forest-bright)';
+    if(w>th.heavy){ loadLabel='Sobrecarregado!'; loadColor='var(--blood-bright)'; }
+    else if(w>th.medium){ loadLabel='Pesada'; loadColor='var(--blood-bright)'; }
+    else if(w>th.light){ loadLabel='Média'; loadColor='var(--gold-bright)'; }
+    el.innerHTML = tabHeader('🎒 Inventário', `Peso atual: ${w.toFixed(1)} · Leve ≤${th.light.toFixed(0)} · Média ≤${th.medium.toFixed(0)} · Pesada ≤${th.heavy.toFixed(0)} — <span style="color:${loadColor}">Carga: ${loadLabel}</span>`);
+
+    const econ = document.createElement('div');
+    econ.className='card';
+    econ.style.marginBottom='16px';
+    const total = Calc.currencyTotalGold(c);
+    econ.innerHTML = `<h3>💰 Economia — Patrimônio total: ${total} PO equivalentes</h3>
+      <div class="row">
+        ${['cp','sp','ep','gp','pp'].map(k=>`<div class="field"><label>${({cp:'Cobre',sp:'Prata',ep:'Electrum',gp:'Ouro',pp:'Platina'})[k]}</label><input type="number" data-cur="${k}" value="${c.currency[k]||0}"></div>`).join('')}
+      </div>
+      <button class="btn small ghost" id="btnAddCoin">+ Moeda personalizada</button>
+      <div id="customCoins"></div>`;
+    el.appendChild(econ);
+
+    const addBtn = document.createElement('button');
+    addBtn.className='btn'; addBtn.textContent='+ Novo Item'; addBtn.style.margin='0 0 14px';
+    addBtn.addEventListener('click', ()=>{
+      c.inventory.push({id:Model.uid('inv'), icon:'📦', name:'Novo Item', qty:1, weight:0, value:0, category:'Diversos', description:'', rarity:'', state:'Bom', stackable:true, consumable:false, equippable:false});
+      markDirty(); render();
+    });
+    el.appendChild(addBtn);
+
+    const grid = document.createElement('div'); grid.className='item-grid';
+    const categories = ['Armas','Armaduras','Consumíveis','Ingredientes','Ferramentas','Tesouros','Documentos','Chaves','Objetos de Missão','Diversos'];
+    c.inventory.forEach(item=>{
+      const div = document.createElement('div'); div.className='card item-card';
+      div.innerHTML = `
+        <div class="ihead"><div class="iname">${item.icon||'📦'} ${item.name||'Item'}</div><span class="pill">${item.category||'Diversos'}</span></div>
+        <div class="row">
+          <div class="field"><label>Ícone (emoji)</label><input data-i="icon" value="${item.icon||''}"></div>
+          <div class="field"><label>Nome</label><input data-i="name" value="${item.name||''}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Quantidade</label><input type="number" data-i="qty" value="${item.qty||1}"></div>
+          <div class="field"><label>Peso (un.)</label><input type="number" data-i="weight" value="${item.weight||0}"></div>
+          <div class="field"><label>Valor</label><input type="number" data-i="value" value="${item.value||0}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Categoria</label><select data-i="category">${categories.map(cat=>`<option ${item.category===cat?'selected':''}>${cat}</option>`).join('')}</select></div>
+          <div class="field"><label>Raridade</label><input data-i="rarity" value="${item.rarity||''}"></div>
+          <div class="field"><label>Estado</label><input data-i="state" value="${item.state||''}"></div>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" data-i="stackable" ${item.stackable?'checked':''}> Empilhável</label>
+          <label><input type="checkbox" data-i="consumable" ${item.consumable?'checked':''}> Consumível</label>
+          <label><input type="checkbox" data-i="equippable" ${item.equippable?'checked':''}> Equipável</label>
+        </div>
+        <div class="field"><label>Descrição</label><textarea rows="2" data-i="description">${item.description||''}</textarea></div>
+        <div class="actions">
+          <button class="btn small ghost" data-act="dup">⧉ Duplicar</button>
+          <button class="btn small danger" data-act="del">🗑️ Remover</button>
+        </div>
+      `;
+      div.querySelectorAll('[data-i]').forEach(inp=>{
+        const evt = inp.type==='checkbox' ? 'change':'input';
+        inp.addEventListener(evt, ()=>{
+          let v = inp.type==='checkbox' ? inp.checked : inp.value;
+          if(['qty','weight','value'].includes(inp.dataset.i)) v=parseFloat(v||0);
+          item[inp.dataset.i]=v; markDirty();
+          if(['icon','name'].includes(inp.dataset.i)) div.querySelector('.iname').textContent = `${item.icon||'📦'} ${item.name||'Item'}`;
+        });
+      });
+      div.querySelector('[data-act="dup"]').addEventListener('click', ()=>{ c.inventory.push({...item,id:Model.uid('inv')}); markDirty(); render(); });
+      div.querySelector('[data-act="del"]').addEventListener('click', ()=>{ c.inventory = c.inventory.filter(x=>x.id!==item.id); markDirty(); render(); });
+      grid.appendChild(div);
+    });
+    el.appendChild(grid);
+
+    setTimeout(()=>{
+      el.querySelectorAll('[data-cur]').forEach(inp=>{
+        inp.addEventListener('input', ()=>{ c.currency[inp.dataset.cur]=parseFloat(inp.value||0); markDirty(); render(); });
+      });
+      document.getElementById('btnAddCoin').addEventListener('click', ()=>{
+        c.currency.custom.push({id:Model.uid('coin'), name:'Moeda', qty:0, rateToGold:1});
+        markDirty(); render();
+      });
+    },0);
+    return el;
+  }
+
+  /* ---------- MAGIAS ---------- */
+  function renderMagias(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('✨ Magias', 'Espaços de Magia (não usa Mana) e grimório de feitiços.');
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn secondary small';
+    toggleBtn.style.marginBottom = '14px';
+    toggleBtn.textContent = c.settings.spellsCollapsed ? '▸ Expandir Seção de Magias' : '▾ Recolher Seção de Magias';
+    toggleBtn.addEventListener('click', ()=>{
+      c.settings.spellsCollapsed = !c.settings.spellsCollapsed;
+      markDirty(); render();
+    });
+    el.appendChild(toggleBtn);
+
+    if(c.settings.spellsCollapsed){
+      const totalSlotsMax = Object.values(c.spells.slots).reduce((a,s)=>a+s.max,0);
+      const totalSlotsUsed = Object.values(c.spells.slots).reduce((a,s)=>a+s.used,0);
+      const summary = document.createElement('div');
+      summary.className = 'card';
+      summary.innerHTML = `
+        <h3>📖 Resumo de Magias</h3>
+        <p><b>${c.spells.list.length}</b> magia(s) cadastrada(s)${c.spells.concentratingOn?` · Concentrando em <span style="color:var(--gold-bright)">${c.spells.concentratingOn}</span>`:''}</p>
+        <p class="muted" style="margin-bottom:8px;">Espaços disponíveis no total: <b style="color:var(--gold-bright)">${totalSlotsMax-totalSlotsUsed}/${totalSlotsMax}</b></p>
+        <div class="row" style="flex-wrap:wrap; gap:6px;">
+          ${Object.entries(c.spells.slots).filter(([,s])=>s.max>0).map(([lvl,s])=>`<span class="pill">${SPELL_LEVEL_LABELS[lvl]}: ${s.max-s.used}/${s.max}</span>`).join('') || '<span class="muted">Nenhum espaço configurado</span>'}
+        </div>`;
+      el.appendChild(summary);
+      return el;
+    }
+
+    const slotsCard = document.createElement('div'); slotsCard.className='card'; slotsCard.style.marginBottom='16px';
+    slotsCard.innerHTML = `<h3>Espaços de Magia ${c.spells.concentratingOn?`· Concentrando em: <span style="color:var(--gold-bright)">${c.spells.concentratingOn}</span>`:''}</h3>
+      <div class="section-sub" style="margin:-4px 0 12px;">Defina o máximo de cada nível abaixo e clique nos círculos das barras para gastar ou recuperar espaços durante a sessão.</div>
+      <div class="row" id="slotMaxRow"></div>
+      <div id="pipBarsWrap" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;"></div>`;
+    const maxRow = slotsCard.querySelector('#slotMaxRow');
+    ['Truques','1','2','3','4','5','6','7','8','9'].forEach((lbl,idx)=>{
+      const lvl = idx.toString();
+      const s = c.spells.slots[lvl];
+      const box = document.createElement('div');
+      box.className='field'; box.style.minWidth='90px'; box.style.maxWidth='120px';
+      box.innerHTML = `<label>${idx===0?'Truques':lbl+'º Nível — Máx.'}</label><input type="number" min="0" data-slot-max="${lvl}" value="${s.max}">`;
+      maxRow.appendChild(box);
+    });
+    const pipWrap = slotsCard.querySelector('#pipBarsWrap');
+    Object.keys(c.spells.slots).sort((a,b)=>a-b).forEach(lvl=>{
+      const s = c.spells.slots[lvl];
+      if(s.max>0) pipWrap.insertAdjacentHTML('beforeend', pipRowHTML(lvl, SPELL_LEVEL_LABELS[lvl], s));
+    });
+    if(pipWrap.children.length===0){ pipWrap.innerHTML = '<p class="muted" style="margin:0;">Defina ao menos um espaço máximo acima para ver a barra de magia daquele nível aqui.</p>'; }
+    el.appendChild(slotsCard);
+
+    if(c.spells.concentratingOn){
+      const cbtn=document.createElement('button'); cbtn.className='btn small danger'; cbtn.textContent='Encerrar Concentração'; cbtn.style.marginBottom='16px';
+      cbtn.addEventListener('click', ()=>{ c.spells.concentratingOn=null; markDirty(); render(); });
+      el.appendChild(cbtn);
+    }
+
+    const addBtn = document.createElement('button'); addBtn.className='btn'; addBtn.textContent='+ Nova Magia'; addBtn.style.marginBottom='14px';
+    addBtn.addEventListener('click', ()=>{
+      c.spells.list.push({id:Model.uid('spell'), name:'Nova Magia', level:0, school:'', ritual:false, concentration:false, castTime:'', range:'', target:'', area:'', duration:'', components:'', material:'', damageType:'', save:'', dc:0, attackBonus:0, description:'', higherLevels:'', source:'', tags:'', notes:'', collapsed:false});
+      markDirty(); render();
+    });
+    el.appendChild(addBtn);
+
+    const grid = document.createElement('div'); grid.className='item-grid';
+    c.spells.list.forEach(sp=>{
+      const div = document.createElement('div'); div.className='card item-card' + (sp.collapsed ? ' collapsed' : '');
+      div.innerHTML = `
+        <div class="ihead" data-collapse-toggle style="cursor:pointer;" title="Clique para minimizar/expandir"><div class="iname"><span class="chevron">▾</span> ${sp.name||'Magia'}</div><span class="pill">${sp.level===0?'Truque':'Nível '+sp.level}</span></div>
+        <div class="collapsed-summary">${sp.school||'—'}${sp.concentration?' · Concentração':''}${sp.dc?` · CD ${sp.dc}`:''}</div>
+        <div class="card-body">
+        <div class="row">
+          <div class="field"><label>Nome</label><input data-s="name" value="${sp.name||''}"></div>
+          <div class="field"><label>Nível</label><input type="number" min="0" max="9" data-s="level" value="${sp.level||0}"></div>
+          <div class="field"><label>Escola</label><input data-s="school" value="${sp.school||''}"></div>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" data-s="ritual" ${sp.ritual?'checked':''}> Ritual</label>
+          <label><input type="checkbox" data-s="concentration" ${sp.concentration?'checked':''}> Concentração</label>
+        </div>
+        <div class="row">
+          <div class="field"><label>Tempo de Conjuração</label><input data-s="castTime" value="${sp.castTime||''}"></div>
+          <div class="field"><label>Alcance</label><input data-s="range" value="${sp.range||''}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Alvo</label><input data-s="target" value="${sp.target||''}"></div>
+          <div class="field"><label>Área</label><input data-s="area" value="${sp.area||''}"></div>
+          <div class="field"><label>Duração</label><input data-s="duration" value="${sp.duration||''}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Componentes</label><input data-s="components" value="${sp.components||''}"></div>
+          <div class="field"><label>Material</label><input data-s="material" value="${sp.material||''}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Tipo de Dano</label><input data-s="damageType" value="${sp.damageType||''}"></div>
+          <div class="field"><label>Teste de Resistência</label><input data-s="save" value="${sp.save||''}"></div>
+          <div class="field"><label>CD</label><input type="number" data-s="dc" value="${sp.dc||0}"></div>
+          <div class="field"><label>Ataque Mágico</label><input type="number" data-s="attackBonus" value="${sp.attackBonus||0}"></div>
+        </div>
+        <div class="field"><label>Descrição Completa</label><textarea rows="3" data-s="description">${sp.description||''}</textarea></div>
+        <div class="field"><label>Conjuração em Níveis Superiores</label><textarea rows="2" data-s="higherLevels">${sp.higherLevels||''}</textarea></div>
+        <div class="row">
+          <div class="field"><label>Fonte</label><input data-s="source" value="${sp.source||''}"></div>
+          <div class="field"><label>Tags</label><input data-s="tags" value="${sp.tags||''}"></div>
+        </div>
+        <div class="field"><label>Observações</label><textarea rows="2" data-s="notes">${sp.notes||''}</textarea></div>
+        </div>
+        <div class="actions">
+          <button class="btn small" data-act="cast">✨ Conjurar</button>
+          <button class="btn small ghost" data-act="dup">⧉ Duplicar</button>
+          <button class="btn small danger" data-act="del">🗑️ Remover</button>
+        </div>
+      `;
+      div.querySelector('[data-collapse-toggle]').addEventListener('click', ()=>{
+        sp.collapsed = !sp.collapsed;
+        markDirty(); render();
+      });
+      div.querySelectorAll('[data-s]').forEach(inp=>{
+        const evt = inp.type==='checkbox' ? 'change':'input';
+        inp.addEventListener(evt, ()=>{
+          let v = inp.type==='checkbox' ? inp.checked : inp.value;
+          if(['level','dc','attackBonus'].includes(inp.dataset.s)) v=parseInt(v||0);
+          sp[inp.dataset.s]=v; markDirty();
+          if(inp.dataset.s==='name') div.querySelector('.iname').textContent = sp.name;
+        });
+      });
+      div.querySelector('[data-act="cast"]').addEventListener('click', ()=>{
+        const lvl = sp.level.toString();
+        if(sp.level>0){
+          const slot = c.spells.slots[lvl];
+          if(!slot || slot.used>=slot.max){ toast('Sem espaços', '✗', `Nenhum espaço de nível ${lvl} disponível`); return; }
+          slot.used += 1;
+        }
+        if(sp.concentration){
+          if(c.spells.concentratingOn && c.spells.concentratingOn!==sp.name){
+            Hist.add(c,'Concentração encerrada', c.spells.concentratingOn, 'Substituída por nova magia');
+          }
+          c.spells.concentratingOn = sp.name;
+        }
+        Hist.add(c,'Magia conjurada', sp.name, `Nível ${sp.level}${sp.concentration?' · Concentração':''}`);
+        toast('Magia Conjurada', sp.name, sp.level>0?`Espaço nível ${sp.level} gasto`:'Truque');
+        markDirty(); render();
+      });
+      div.querySelector('[data-act="dup"]').addEventListener('click', ()=>{ c.spells.list.push({...sp,id:Model.uid('spell')}); markDirty(); render(); });
+      div.querySelector('[data-act="del"]').addEventListener('click', ()=>{ c.spells.list = c.spells.list.filter(x=>x.id!==sp.id); markDirty(); render(); });
+      grid.appendChild(div);
+    });
+    el.appendChild(grid);
+
+    setTimeout(()=>{
+      el.querySelectorAll('[data-slot-max]').forEach(inp=>inp.addEventListener('input', ()=>{
+        const lvl = inp.dataset.slotMax;
+        c.spells.slots[lvl].max = parseInt(inp.value||0);
+        if(c.spells.slots[lvl].used > c.spells.slots[lvl].max) c.spells.slots[lvl].used = c.spells.slots[lvl].max;
+        markDirty(); render();
+      }));
+      el.querySelectorAll('.pip').forEach(pip=>{
+        pip.addEventListener('click', ()=>{
+          const lvl = pip.dataset.piplevel;
+          const idx = parseInt(pip.dataset.pipindex);
+          const s = c.spells.slots[lvl];
+          s.used = (idx<=s.used) ? (idx-1) : idx;
+          Hist.add(c,'Espaço de Magia', `${SPELL_LEVEL_LABELS[lvl]}: ${s.max-s.used}/${s.max} disponíveis`, '');
+          markDirty(); render();
+        });
+      });
+    },0);
+    return el;
+  }
+
+  /* ---------- PERÍCIAS ---------- */
+  function renderPericias(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('🎯 Perícias', 'Clique no círculo para alternar: nenhuma → metade → proficiente → especialização.');
+    const list = document.createElement('div'); list.className='card';
+    Model.SKILLS.forEach(([name,attr])=>{
+      const s = c.skills[name];
+      const row = document.createElement('div'); row.className='skill-row';
+      row.innerHTML = `
+        <span class="prof-dot ${s.prof!=='none'?s.prof:''}" data-skill="${name}" title="Clique para alternar"></span>
+        <span class="sname">${name} <span class="sattr">(${attr.toUpperCase()})</span></span>
+        <input class="sbonus" type="number" data-skillbonus="${name}" value="${s.temp+s.perm}" title="Bônus adicional (temp+perm)">
+        <span class="smod">${Calc.fmt(Calc.skillMod(c,name))}</span>
+        <button class="btn small" data-skillroll="${name}">🎲</button>
+      `;
+      list.appendChild(row);
+    });
+    el.appendChild(list);
+    setTimeout(()=>{
+      list.querySelectorAll('[data-skill]').forEach(dot=>{
+        dot.addEventListener('click', ()=>{
+          const s = c.skills[dot.dataset.skill];
+          const order = ['none','half','prof','expertise'];
+          s.prof = order[(order.indexOf(s.prof)+1)%order.length];
+          markDirty(); render();
+        });
+      });
+      list.querySelectorAll('[data-skillbonus]').forEach(inp=>{
+        inp.addEventListener('input', ()=>{
+          c.skills[inp.dataset.skillbonus].perm = parseInt(inp.value||0);
+          c.skills[inp.dataset.skillbonus].temp = 0;
+          markDirty(); render();
+        });
+      });
+      list.querySelectorAll('[data-skillroll]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const name = btn.dataset.skillroll;
+          const r = Dice.parseAndRoll('1d20');
+          const m = Calc.skillMod(c,name);
+          const total = r.total+m;
+          toast(name, total, `d20(${r.total}) ${Calc.fmt(m)}`);
+          Hist.add(c,'Teste de Perícia', `${name}: ${total}`, `d20=${r.total} mod=${Calc.fmt(m)}`);
+          markDirty();
+        });
+      });
+    },0);
+    return el;
+  }
+
+  /* ---------- TESTES DE RESISTÊNCIA ---------- */
+  function renderResistencia(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('🧿 Testes de Resistência', 'Saving throws para os seis atributos.');
+    const grid = document.createElement('div'); grid.className='grid'; grid.style.gridTemplateColumns='repeat(auto-fit,minmax(200px,1fr))';
+    Object.keys(ATTR_NAMES).forEach(key=>{
+      const s = c.saves[key];
+      const card = document.createElement('div'); card.className='card';
+      card.innerHTML = `
+        <h3>${ATTR_NAMES[key]} <span style="margin-left:auto;font-family:var(--font-mono);color:var(--gold-bright);">${Calc.fmt(Calc.saveMod(c,key))}</span></h3>
+        <label><input type="checkbox" data-save="${key}" ${s.proficient?'checked':''}> Proficiente</label>
+        <div class="row" style="margin-top:8px;">
+          <div class="field"><label>Bônus Temp.</label><input type="number" data-savetemp="${key}" value="${s.temp}"></div>
+          <div class="field"><label>Bônus Perm.</label><input type="number" data-saveperm="${key}" value="${s.perm}"></div>
+        </div>
+        <button class="btn small roll-btn" data-saveroll="${key}">🎲 Rolar</button>
+      `;
+      grid.appendChild(card);
+    });
+    el.appendChild(grid);
+    setTimeout(()=>{
+      grid.querySelectorAll('[data-save]').forEach(cb=>cb.addEventListener('change', ()=>{ c.saves[cb.dataset.save].proficient = cb.checked; markDirty(); render(); }));
+      grid.querySelectorAll('[data-savetemp]').forEach(inp=>inp.addEventListener('input', ()=>{ c.saves[inp.dataset.savetemp].temp = parseInt(inp.value||0); markDirty(); render(); }));
+      grid.querySelectorAll('[data-saveperm]').forEach(inp=>inp.addEventListener('input', ()=>{ c.saves[inp.dataset.saveperm].perm = parseInt(inp.value||0); markDirty(); render(); }));
+      grid.querySelectorAll('[data-saveroll]').forEach(btn=>btn.addEventListener('click', ()=>{
+        const key = btn.dataset.saveroll;
+        const r = Dice.parseAndRoll('1d20');
+        const m = Calc.saveMod(c,key);
+        toast(`Resistência: ${ATTR_NAMES[key]}`, r.total+m, `d20(${r.total}) ${Calc.fmt(m)}`);
+        Hist.add(c,'Teste de Resistência', `${ATTR_NAMES[key]}: ${r.total+m}`, `d20=${r.total} mod=${Calc.fmt(m)}`);
+        markDirty();
+      }));
+    },0);
+    return el;
+  }
+
+  /* ---------- CONDIÇÕES ---------- */
+  function renderCondicoes(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('💀 Condições', 'Condições ativas no personagem — padrão de D&D 2024 e customizadas de Varagon.');
+    const addRow = document.createElement('div'); addRow.className='row'; addRow.style.marginBottom='14px';
+    addRow.innerHTML = `<select id="condPreset" style="min-width:220px;">
+        <optgroup label="D&D 2024">${Model.DEFAULT_CONDITIONS.map(x=>`<option>${x}</option>`).join('')}</optgroup>
+        <optgroup label="Varagon">${['Sangramento','Ossos Quebrados','Hemorragia','Maldição','Congelamento','Armadura Danificada','Exaustão Física','Escudo Quebrado','Marca do Caçador'].map(x=>`<option>${x}</option>`).join('')}</optgroup>
+      </select>
+      <button class="btn small" id="btnAddCondPreset">+ Adicionar</button>
+      <input id="condCustomName" placeholder="Nome de condição personalizada" style="min-width:200px;">
+      <button class="btn small secondary" id="btnAddCondCustom">+ Personalizada</button>`;
+    el.appendChild(addRow);
+
+    const grid = document.createElement('div'); grid.className='item-grid';
+    c.conditions.forEach(cond=>{
+      const div = document.createElement('div'); div.className='card item-card';
+      div.innerHTML = `
+        <div class="ihead"><div class="iname">💀 ${cond.name}</div></div>
+        <div class="row">
+          <div class="field"><label>Origem</label><input data-c="origin" value="${cond.origin||''}"></div>
+          <div class="field"><label>Quem aplicou</label><input data-c="appliedBy" value="${cond.appliedBy||''}"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Duração</label><input data-c="duration" value="${cond.duration||''}"></div>
+          <div class="field"><label>Rodadas</label><input type="number" data-c="rounds" value="${cond.rounds||0}"></div>
+        </div>
+        <div class="field"><label>Descrição / Efeitos</label><textarea rows="2" data-c="description">${cond.description||''}</textarea></div>
+        <div class="actions"><button class="btn small danger" data-act="del">Remover</button></div>
+      `;
+      div.querySelectorAll('[data-c]').forEach(inp=>inp.addEventListener('input', ()=>{
+        let v = inp.value; if(inp.dataset.c==='rounds') v=parseInt(v||0);
+        cond[inp.dataset.c]=v; markDirty();
+      }));
+      div.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+        c.conditions = c.conditions.filter(x=>x.id!==cond.id);
+        Hist.add(c,'Condição removida', cond.name, '');
+        markDirty(); render();
+      });
+      grid.appendChild(div);
+    });
+    el.appendChild(grid);
+
+    setTimeout(()=>{
+      document.getElementById('btnAddCondPreset').addEventListener('click', ()=>{
+        const name = document.getElementById('condPreset').value;
+        c.conditions.push({id:Model.uid('cond'), name, origin:'', duration:'', rounds:0, appliedBy:'', description:''});
+        Hist.add(c,'Condição aplicada', name, '');
+        markDirty(); render();
+      });
+      document.getElementById('btnAddCondCustom').addEventListener('click', ()=>{
+        const name = document.getElementById('condCustomName').value.trim();
+        if(!name) return;
+        c.conditions.push({id:Model.uid('cond'), name, origin:'', duration:'', rounds:0, appliedBy:'', description:''});
+        Hist.add(c,'Condição aplicada', name, 'Personalizada');
+        markDirty(); render();
+      });
+    },0);
+    return el;
+  }
+
+  /* ---------- TIPOS DE DANO ---------- */
+  function renderTiposDano(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('🔥 Resistências, Vulnerabilidades e Imunidades', 'Estado de cada tipo de dano para a calculadora de combate.');
+    const addRow = document.createElement('div'); addRow.style.marginBottom='14px';
+    addRow.innerHTML = `<input id="newDmgType" placeholder="Novo tipo de dano personalizado"> <button class="btn small" id="btnAddDmgType">+ Adicionar Tipo</button>`;
+    el.appendChild(addRow);
+    const grid = document.createElement('div'); grid.className='chip-grid';
+    Object.keys(c.damageTypes).forEach(type=>{
+      const chip = document.createElement('div'); chip.className='chip';
+      chip.innerHTML = `<b>${type}</b><select data-dt="${type}">
+        <option value="normal" ${c.damageTypes[type]==='normal'?'selected':''}>Normal</option>
+        <option value="resistencia" ${c.damageTypes[type]==='resistencia'?'selected':''}>Resistência</option>
+        <option value="vulnerabilidade" ${c.damageTypes[type]==='vulnerabilidade'?'selected':''}>Vulnerabilidade</option>
+        <option value="imunidade" ${c.damageTypes[type]==='imunidade'?'selected':''}>Imunidade</option>
+      </select>`;
+      chip.querySelector('select').className = 'state-'+c.damageTypes[type];
+      chip.querySelector('select').addEventListener('change', (e)=>{
+        c.damageTypes[type] = e.target.value;
+        e.target.className = 'state-'+e.target.value;
+        markDirty();
+      });
+      grid.appendChild(chip);
+    });
+    el.appendChild(grid);
+    setTimeout(()=>{
+      document.getElementById('btnAddDmgType').addEventListener('click', ()=>{
+        const name = document.getElementById('newDmgType').value.trim();
+        if(!name || c.damageTypes[name]) return;
+        c.damageTypes[name] = 'normal';
+        markDirty(); render();
+      });
+    },0);
+    return el;
+  }
+
+  /* ---------- HABILIDADES DE RAÇA / CLASSE ---------- */
+  function featureCard(item, arrayKey){
+    const div = document.createElement('div'); div.className='card item-card';
+    div.innerHTML = `
+      <div class="ihead"><div class="iname">${item.name||'Nova Habilidade'}</div><span class="pill">${item.level||'—'}</span></div>
+      <div class="row">
+        <div class="field"><label>Nome</label><input data-f="name" value="${item.name||''}"></div>
+        <div class="field"><label>Nível / Origem</label><input data-f="level" value="${item.level||''}" placeholder="ex: Nível 3, Traço racial"></div>
+      </div>
+      <div class="field"><label>Descrição</label><textarea rows="3" data-f="description">${item.description||''}</textarea></div>
+      <div class="actions">
+        <button class="btn small ghost" data-act="dup">⧉ Duplicar</button>
+        <button class="btn small danger" data-act="del">Remover</button>
+      </div>`;
+    div.querySelectorAll('[data-f]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        item[inp.dataset.f] = inp.value; markDirty();
+        if(inp.dataset.f==='name') div.querySelector('.iname').textContent = item.name || 'Nova Habilidade';
+        if(inp.dataset.f==='level') div.querySelector('.pill').textContent = item.level || '—';
+      });
+    });
+    div.querySelector('[data-act="dup"]').addEventListener('click', ()=>{ CURRENT[arrayKey].push({...item, id:Model.uid('feat')}); markDirty(); render(); });
+    div.querySelector('[data-act="del"]').addEventListener('click', ()=>{ CURRENT[arrayKey] = CURRENT[arrayKey].filter(x=>x.id!==item.id); markDirty(); render(); });
+    return div;
+  }
+  function renderFeatureSection(title, icon, arrayKey, btnLabel){
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '22px';
+    wrap.innerHTML = `<h3 class="display" style="color:var(--gold-bright); margin:0 0 10px; display:flex; align-items:center; gap:8px;">${icon} ${title}</h3>`;
+    const addBtn = document.createElement('button');
+    addBtn.className='btn'; addBtn.textContent = btnLabel; addBtn.style.margin='0 0 12px';
+    addBtn.addEventListener('click', ()=>{
+      CURRENT[arrayKey].push({id:Model.uid('feat'), name:'Nova Habilidade', level:'', description:''});
+      markDirty(); render();
+    });
+    wrap.appendChild(addBtn);
+    const grid = document.createElement('div'); grid.className='item-grid';
+    if(CURRENT[arrayKey].length===0){
+      const empty = document.createElement('p'); empty.className='muted'; empty.style.margin='0';
+      empty.textContent = 'Nenhuma habilidade cadastrada ainda.';
+      grid.appendChild(empty);
+    } else {
+      CURRENT[arrayKey].forEach(item=>grid.appendChild(featureCard(item, arrayKey)));
+    }
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  /* ---------- RECURSOS & CIA ---------- */
+  function renderRecursos(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('🐎 Recursos da Classe, Companheiros & Montarias', 'Habilidades de raça e classe, recursos especiais, aliados e montarias.');
+
+    el.appendChild(renderFeatureSection('Habilidades de Raça', '🧬', 'raceFeatures', '+ Nova Habilidade de Raça'));
+    el.appendChild(renderFeatureSection('Habilidades de Classe', '📘', 'classFeatures', '+ Nova Habilidade de Classe'));
+
+    el.insertAdjacentHTML('beforeend', '<h3 class="display" style="color:var(--gold-bright); margin:0 0 10px; display:flex; align-items:center; gap:8px;">⚡ Recursos da Classe (uso por descanso)</h3>');
+    const addResBtn = document.createElement('button'); addResBtn.className='btn'; addResBtn.textContent='+ Novo Recurso'; addResBtn.style.margin='0 0 12px';
+    addResBtn.addEventListener('click', ()=>{ c.classResources.push({id:Model.uid('res'), name:'Novo Recurso', current:1, max:1, recovery:'longo', description:''}); markDirty(); render(); });
+    el.appendChild(addResBtn);
+    const resGrid = document.createElement('div'); resGrid.className='item-grid'; resGrid.style.marginBottom='20px';
+    c.classResources.forEach(r=>{
+      const div = document.createElement('div'); div.className='card item-card';
+      div.innerHTML = `
+        <div class="ihead"><div class="iname">${r.name}</div><span class="pill">${r.current}/${r.max}</span></div>
+        <div class="row">
+          <div class="field"><label>Nome</label><input data-r="name" value="${r.name}"></div>
+          <div class="field"><label>Recuperação</label><select data-r="recovery"><option value="curto" ${r.recovery==='curto'?'selected':''}>Descanso Curto</option><option value="longo" ${r.recovery==='longo'?'selected':''}>Descanso Longo</option><option value="nenhum" ${r.recovery==='nenhum'?'selected':''}>Nenhuma</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Atual</label><input type="number" data-r="current" value="${r.current}"></div>
+          <div class="field"><label>Máximo</label><input type="number" data-r="max" value="${r.max}"></div>
+        </div>
+        <div class="field"><label>Descrição</label><textarea rows="2" data-r="description">${r.description||''}</textarea></div>
+        <div class="actions">
+          <button class="btn small" data-act="spend">− Gastar</button>
+          <button class="btn small secondary" data-act="recover">+ Recuperar</button>
+          <button class="btn small danger" data-act="del">Remover</button>
+        </div>`;
+      div.querySelectorAll('[data-r]').forEach(inp=>{
+        inp.addEventListener('input', ()=>{
+          let v = inp.value; if(['current','max'].includes(inp.dataset.r)) v=parseInt(v||0);
+          r[inp.dataset.r]=v; markDirty();
+          if(inp.dataset.r==='name') div.querySelector('.iname').textContent=r.name;
+        });
+      });
+      div.querySelector('[data-act="spend"]').addEventListener('click', ()=>{ r.current=Math.max(0,r.current-1); markDirty(); render(); });
+      div.querySelector('[data-act="recover"]').addEventListener('click', ()=>{ r.current=Math.min(r.max,r.current+1); markDirty(); render(); });
+      div.querySelector('[data-act="del"]').addEventListener('click', ()=>{ c.classResources=c.classResources.filter(x=>x.id!==r.id); markDirty(); render(); });
+      resGrid.appendChild(div);
+    });
+    el.appendChild(resGrid);
+
+    ['companions','mounts'].forEach((key,idx)=>{
+      const title = idx===0?'🧑‍🤝‍🧑 Companheiros':'🐎 Montarias';
+      const sec = document.createElement('div');
+      const addBtn = document.createElement('button'); addBtn.className='btn'; addBtn.textContent='+ Adicionar'; addBtn.style.margin='0 0 12px';
+      addBtn.addEventListener('click', ()=>{ c[key].push({id:Model.uid(key), name:'Novo', description:'', stats:''}); markDirty(); render(); });
+      sec.innerHTML = `<h3 class="display" style="color:var(--gold-bright);margin:20px 0 10px;">${title}</h3>`;
+      sec.appendChild(addBtn);
+      const g = document.createElement('div'); g.className='item-grid';
+      c[key].forEach(x=>{
+        const div=document.createElement('div'); div.className='card item-card';
+        div.innerHTML = `<div class="field"><label>Nome</label><input data-x="name" value="${x.name}"></div>
+          <div class="field"><label>Estatísticas / Ficha resumida</label><textarea rows="3" data-x="stats">${x.stats||''}</textarea></div>
+          <div class="field"><label>Descrição</label><textarea rows="2" data-x="description">${x.description||''}</textarea></div>
+          <div class="actions"><button class="btn small danger" data-act="del">Remover</button></div>`;
+        div.querySelectorAll('[data-x]').forEach(inp=>inp.addEventListener('input', ()=>{ x[inp.dataset.x]=inp.value; markDirty(); }));
+        div.querySelector('[data-act="del"]').addEventListener('click', ()=>{ c[key]=c[key].filter(i=>i.id!==x.id); markDirty(); render(); });
+        g.appendChild(div);
+      });
+      sec.appendChild(g);
+      el.appendChild(sec);
+    });
+    return el;
+  }
+
+  /* ---------- ANOTAÇÕES ---------- */
+  function renderAnotacoes(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('📝 Anotações', 'Bloco livre para anotações de sessão.') + `<div class="card"><textarea rows="18" id="notesArea" style="width:100%;">${c.notes||''}</textarea></div>`;
+    setTimeout(()=>{ document.getElementById('notesArea').addEventListener('input', e=>{ c.notes=e.target.value; markDirty(); }); },0);
+    return el;
+  }
+
+  /* ---------- HISTÓRICO ---------- */
+  function renderHistorico(){
+    const c = CURRENT;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('📖 Histórico de Combate', `${c.history.length} registro(s).`);
+    const clearBtn = document.createElement('button'); clearBtn.className='btn small danger'; clearBtn.textContent='Limpar Histórico'; clearBtn.style.marginBottom='12px';
+    clearBtn.addEventListener('click', ()=>{ if(confirm('Limpar todo o histórico?')){ c.history=[]; markDirty(); render(); } });
+    el.appendChild(clearBtn);
+    const list = document.createElement('div');
+    c.history.forEach(h=>{
+      const d = document.createElement('div'); d.className='hist-entry';
+      d.innerHTML = `<div class="htime">${h.time} · ${h.type}</div><div>${h.result}</div>${h.detail?`<div class="muted" style="font-size:.78rem;">${h.detail}</div>`:''}`;
+      list.appendChild(d);
+    });
+    el.appendChild(list);
+    return el;
+  }
+
+  /* ---------- CONFIGURAÇÕES ---------- */
+  function renderConfig(){
+    const c = CURRENT;
+    const s = c.settings;
+    const el = document.createElement('div');
+    el.innerHTML = tabHeader('⚙️ Configurações', 'Ajustes de regras opcionais e da interface.') + `
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+      <div class="card">
+        <h3>Interface</h3>
+        ${field('Tema', `<select id="cfgTheme"><option value="dark" ${s.theme==='dark'?'selected':''}>Escuro</option><option value="light" ${s.theme==='light'?'selected':''}>Claro</option></select>`)}
+        ${field('Escala da Interface (%)', `<input type="number" id="cfgScale" value="${s.scale}">`)}
+        <label><input type="checkbox" id="cfgAnim" ${s.animations?'checked':''}> Exibir animações</label>
+        <label><input type="checkbox" id="cfgSound" ${s.sounds?'checked':''}> Sons</label>
+        <label><input type="checkbox" id="cfgAutoRoll" ${s.autoRoll?'checked':''}> Rolagem automática ao clicar</label>
+      </div>
+      <div class="card">
+        <h3>Regras de Combate</h3>
+        ${field('Regra de Acerto Crítico', `<select id="cfgCrit"><option value="double_dice" ${s.critRule==='double_dice'?'selected':''}>Dobrar dados</option><option value="max_plus_roll" ${s.critRule==='max_plus_roll'?'selected':''}>Dano máximo + rolagem</option></select>`)}
+        ${field('Regra de Falha Crítica', `<select id="cfgFumble"><option value="none" ${s.fumbleRule==='none'?'selected':''}>Sem efeito especial</option><option value="drop_weapon" ${s.fumbleRule==='drop_weapon'?'selected':''}>Pode derrubar a arma</option></select>`)}
+        ${field('Arredondamento de Resistência', `<select id="cfgRound"><option value="down" ${s.resistRounding==='down'?'selected':''}>Sempre para baixo</option><option value="up" ${s.resistRounding==='up'?'selected':''}>Sempre para cima</option></select>`)}
+        ${field('Multiplicador de Carga (FOR × N)', `<input type="number" id="cfgWeightMult" value="${c.weightConfig.multiplier}">`)}
+      </div>
+      <div class="card">
+        <h3>Personagem Ativo</h3>
+        <button class="btn secondary" id="btnManageChars">Gerenciar Personagens</button>
+        <button class="btn ghost" id="btnDeleteChar" style="margin-top:8px;">Excluir Este Personagem</button>
+      </div>
+    </div>`;
+    setTimeout(()=>{
+      document.getElementById('cfgTheme').addEventListener('change', e=>{ s.theme=e.target.value; markDirty(); });
+      document.getElementById('cfgScale').addEventListener('input', e=>{ s.scale=parseInt(e.target.value||100); document.body.style.zoom=(s.scale/100); markDirty(); });
+      document.getElementById('cfgAnim').addEventListener('change', e=>{ s.animations=e.target.checked; markDirty(); });
+      document.getElementById('cfgSound').addEventListener('change', e=>{ s.sounds=e.target.checked; markDirty(); });
+      document.getElementById('cfgAutoRoll').addEventListener('change', e=>{ s.autoRoll=e.target.checked; markDirty(); });
+      document.getElementById('cfgCrit').addEventListener('change', e=>{ s.critRule=e.target.value; markDirty(); });
+      document.getElementById('cfgFumble').addEventListener('change', e=>{ s.fumbleRule=e.target.value; markDirty(); });
+      document.getElementById('cfgRound').addEventListener('change', e=>{ s.resistRounding=e.target.value; markDirty(); });
+      document.getElementById('cfgWeightMult').addEventListener('input', e=>{ c.weightConfig.multiplier=parseFloat(e.target.value||15); markDirty(); });
+      document.getElementById('btnManageChars').addEventListener('click', ()=>App.openCharManager());
+      document.getElementById('btnDeleteChar').addEventListener('click', ()=>App.deleteCurrent());
+    },0);
+    return el;
+  }
+
+  const RENDERERS = {
+    perfil:renderPerfil, atributos:renderAtributos, combate:renderCombate, armas:renderArmas,
+    armaduras:renderArmaduras, equipamentos:renderEquipamentos, inventario:renderInventario,
+    magias:renderMagias, pericias:renderPericias, resistencia:renderResistencia,
+    condicoes:renderCondicoes, tiposdano:renderTiposDano, recursos:renderRecursos,
+    anotacoes:renderAnotacoes, historico:renderHistorico, config:renderConfig
+  };
+
+  function render(){
+    buildNav();
+    renderTopbar();
+    renderResourcePanel();
+    const content = document.getElementById('content');
+    content.innerHTML = '';
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.appendChild(RENDERERS[activeTab]());
+    content.appendChild(panel);
+  }
+
+  return {render, setTab, get activeTab(){return activeTab;}, TABS};
+})();
+function render(){ UI.render(); }
+function renderTopbar(){ /* replaced by UI internal, kept for cross-calls */ UI.render(); }
+function renderResourcePanel(){ /* no-op placeholder, real logic inside UI.render */ }
+
+/* ---------------------- PDF EXPORT ---------------------- */
+const PDF = (() => {
+  function build(c){
+    const eqArmors = Calc.equippedArmors(c);
+    const armTotals = Calc.armorHpTotals(c);
+    const contrib = Calc.armorContribution(c);
+    const es = Calc.esquiva(c);
+    let html = `<h1>${c.meta.name||'Sem Nome'} ${c.meta.title?('— '+c.meta.title):''}</h1>
+    <div class="muted">${c.meta.classe||'—'} ${c.meta.subclasse?('('+c.meta.subclasse+')'):''} · ${c.meta.raca||'—'} · Nível ${c.meta.level||1} · ${c.meta.tendencia||''}</div>
+
+    <div class="p-section"><h2>Perfil</h2>
+      <table><tr><th>Origem</th><td>${c.meta.origem||''}</td><th>Reino</th><td>${c.meta.reino||''}</td></tr>
+      <tr><th>Idade</th><td>${c.meta.idade||''}</td><th>Idiomas</th><td>${c.meta.idiomas||''}</td></tr>
+      <tr><th>Jogador</th><td>${c.meta.jogador||''}</td><th>Mestre</th><td>${c.meta.mestre||''}</td></tr></table>
+      <p><b>História:</b> ${c.meta.historia||'—'}</p>
+    </div>
+
+    <div class="p-section"><h2>Atributos</h2><table><tr>${Object.keys(ATTR_NAMES).map(k=>`<th>${ATTR_NAMES[k]}</th>`).join('')}</tr>
+      <tr>${Object.keys(ATTR_NAMES).map(k=>`<td>${Calc.total(c.attributes[k])} (${Calc.fmt(Calc.mod(c.attributes[k]))})</td>`).join('')}</tr></table>
+      <p>Bônus de Proficiência: ${Calc.fmt(Calc.profBonus(c))}</p>
+    </div>
+
+    <div class="p-section"><h2>Combate</h2>
+      <table><tr><th>Esquiva</th><td>${es.value}</td><th>Vida</th><td>${c.hp.current}/${c.hp.max} (temp ${c.hp.temp})</td></tr>
+      <tr><th>RD Total (equipado)</th><td>${contrib.rd}</td><th>Dados de Vida</th><td>${c.hitDice.current}/${c.hitDice.max} ${c.hitDice.die}</td></tr></table>
+      <p><b>Armaduras equipadas (${eqArmors.length}):</b> ${eqArmors.map(a=>`${a.name} [${a.slot}] — ${Calc.armorStateInfo(a).label} (${a.hpCurrent}/${a.hpMax})`).join('; ')||'Nenhuma'} — Vida da Armadura total: ${armTotals.cur}/${armTotals.max}</p>
+      <p><b>Armas equipadas:</b> ${c.weapons.filter(w=>w.equipped).map(w=>`${w.name} [${w.slot}]`).join('; ')||'Nenhuma'}</p>
+    </div>
+
+    <div class="p-section"><h2>Armas</h2><table><tr><th>Nome</th><th>Dano</th><th>Ataque</th><th>Tipo</th><th>Equipada</th></tr>
+      ${c.weapons.map(w=>`<tr><td>${w.name}</td><td>${w.damageDice}</td><td>${Calc.fmt(Calc.weaponAttackBonus(c,w))}</td><td>${w.damageType}</td><td>${w.equipped?w.slot:'—'}</td></tr>`).join('')||'<tr><td colspan=5>—</td></tr>'}
+    </table></div>
+
+    <div class="p-section"><h2>Armaduras</h2><table><tr><th>Nome</th><th>Slot</th><th>RD</th><th>Esquiva</th><th>Vida</th><th>Equipada</th></tr>
+      ${c.armors.map(a=>`<tr><td>${a.name}</td><td>${a.slot||''}</td><td>${a.rd||0}</td><td>${a.dodgeBonus||0}</td><td>${a.hpCurrent}/${a.hpMax}</td><td>${a.equipped?'Sim':'Não'}</td></tr>`).join('')||'<tr><td colspan=6>—</td></tr>'}
+    </table></div>
+
+    <div class="p-section"><h2>Perícias</h2><table>${Model.SKILLS.map(([n])=>`<tr><td>${n}</td><td>${Calc.fmt(Calc.skillMod(c,n))}</td></tr>`).join('')}</table></div>
+
+    <div class="p-section"><h2>Testes de Resistência</h2><table><tr>${Object.keys(ATTR_NAMES).map(k=>`<th>${ATTR_NAMES[k]}</th>`).join('')}</tr>
+    <tr>${Object.keys(ATTR_NAMES).map(k=>`<td>${Calc.fmt(Calc.saveMod(c,k))}</td>`).join('')}</tr></table></div>
+
+    <div class="p-section"><h2>Inventário</h2><table><tr><th>Item</th><th>Qtd</th><th>Peso</th><th>Categoria</th></tr>
+      ${c.inventory.map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.weight}</td><td>${i.category}</td></tr>`).join('')||'<tr><td colspan=4>—</td></tr>'}
+    </table></div>
+
+    <div class="p-section"><h2>Magias</h2><table><tr><th>Nome</th><th>Nível</th><th>CD</th><th>Descrição</th></tr>
+      ${c.spells.list.map(s=>`<tr><td>${s.name}</td><td>${s.level}</td><td>${s.dc}</td><td>${(s.description||'').slice(0,120)}</td></tr>`).join('')||'<tr><td colspan=4>—</td></tr>'}
+    </table></div>
+
+    <div class="p-section"><h2>Habilidades de Raça</h2><table><tr><th>Nome</th><th>Origem</th><th>Descrição</th></tr>
+      ${c.raceFeatures.map(f=>`<tr><td>${f.name}</td><td>${f.level||''}</td><td>${(f.description||'').slice(0,160)}</td></tr>`).join('')||'<tr><td colspan=3>—</td></tr>'}
+    </table></div>
+
+    <div class="p-section"><h2>Habilidades de Classe</h2><table><tr><th>Nome</th><th>Nível</th><th>Descrição</th></tr>
+      ${c.classFeatures.map(f=>`<tr><td>${f.name}</td><td>${f.level||''}</td><td>${(f.description||'').slice(0,160)}</td></tr>`).join('')||'<tr><td colspan=3>—</td></tr>'}
+    </table></div>
+
+    <div class="p-section"><h2>Condições Ativas</h2><p>${c.conditions.map(x=>x.name).join(', ')||'Nenhuma'}</p></div>
+    <div class="p-section"><h2>Anotações</h2><p>${(c.notes||'').replace(/\n/g,'<br>')}</p></div>
+    `;
+    return html;
+  }
+  function exportPdf(){
+    document.getElementById('printSheet').innerHTML = build(CURRENT);
+    window.print();
+  }
+  return {exportPdf};
+})();
+
+/* ---------------------- APP (init + character mgmt + dice tray) ---------------------- */
+const App = (() => {
+  function ensureCharacter(){
+    let id = Store.getActiveId();
+    let c = id ? Store.load(id) : null;
+    if(!c){
+      c = Model.blankCharacter('Novo Aventureiro');
+      Store.save(c);
+      Store.setActiveId(c.id);
+    }
+    CURRENT = c;
+  }
+
+  function newCharacter(name){
+    const c = Model.blankCharacter(name||'Novo Aventureiro');
+    Store.save(c);
+    Store.setActiveId(c.id);
+    CURRENT = c;
+    UI.render();
+    closeModal();
+  }
+  function switchTo(id){
+    const c = Store.load(id);
+    if(c){ CURRENT=c; Store.setActiveId(id); UI.render(); closeModal(); }
+  }
+  function duplicateCurrent(){
+    const copy = JSON.parse(JSON.stringify(CURRENT));
+    copy.id = Model.uid('char');
+    copy.meta.name = copy.meta.name + ' (Cópia)';
+    Store.save(copy);
+    Store.setActiveId(copy.id);
+    CURRENT = copy;
+    UI.render();
+    closeModal();
+  }
+
+  /* Núcleo compartilhado de exclusão: remove o personagem do armazenamento e,
+     caso seja o personagem ativo, seleciona outro (ou cria um novo em branco). */
+  function deleteCharacterCore(id){
+    const wasActive = (CURRENT && CURRENT.id === id);
+    Store.remove(id);
+    if(wasActive){
+      const remaining = Store.listIds();
+      if(remaining.length>0){
+        const c = Store.load(remaining[0]);
+        CURRENT = c;
+        Store.setActiveId(c.id);
+      } else {
+        const c = Model.blankCharacter('Novo Aventureiro');
+        Store.save(c);
+        Store.setActiveId(c.id);
+        CURRENT = c;
+      }
+      UI.render();
+    }
+  }
+
+  // Exclui um personagem específico a partir do Gerenciador de Personagens (lista completa)
+  function deleteCharacter(id){
+    const summary = Store.allCharsSummary().find(ch=>ch.id===id);
+    const name = summary ? summary.name : 'este personagem';
+    if(!confirm(`Excluir "${name}" permanentemente? Essa ação não pode ser desfeita.`)) return;
+    deleteCharacterCore(id);
+    openCharManager(); // atualiza a lista exibida no modal
+  }
+
+  // Exclui o personagem atualmente ativo (usado no botão da aba Configurações)
+  function deleteCurrent(){
+    if(!confirm('Excluir permanentemente este personagem? Essa ação não pode ser desfeita.')) return;
+    deleteCharacterCore(CURRENT.id);
+    closeModal();
+  }
+
+  function openCharManager(){
+    const chars = Store.allCharsSummary();
+    const html = `<button class="close-x" onclick="closeModal()">✕</button>
+      <h3>Personagens</h3>
+      <div id="charListWrap">${chars.map(ch=>`
+        <div class="char-list-item ${ch.id===CURRENT.id?'active':''}">
+          <div class="cname">${ch.name} <span class="muted">(Nv.${ch.level} ${ch.cls})</span></div>
+          <button class="btn small" onclick="App.switchTo('${ch.id}')">Selecionar</button>
+          <button class="btn small danger" onclick="App.deleteCharacter('${ch.id}')">🗑️</button>
+        </div>`).join('') || '<p class="muted">Nenhum personagem salvo ainda.</p>'}</div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn" onclick="App.promptNewCharacter()">+ Criar Novo</button>
+        <button class="btn secondary" onclick="App.duplicateCurrent()">⧉ Duplicar Atual</button>
+      </div>`;
+    openModal(html);
+  }
+  function promptNewCharacter(){
+    const name = prompt('Nome do novo personagem:', 'Novo Aventureiro');
+    if(name===null) return;
+    newCharacter(name);
+  }
+
+  function exportJson(){
+    const blob = new Blob([JSON.stringify(CURRENT,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${(CURRENT.meta.name||'personagem').replace(/\s+/g,'_')}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+  function importJson(file){
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        let data = JSON.parse(e.target.result);
+        if(!data.id) data.id = Model.uid('char');
+        data = Model.normalize(data);
+        Store.save(data);
+        Store.setActiveId(data.id);
+        CURRENT = data;
+        UI.render();
+        toast('Importado', '✓', CURRENT.meta.name||'Personagem importado');
+      }catch(err){
+        alert('Arquivo inválido. Certifique-se de importar um JSON exportado por esta ficha.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function initDiceTray(){
+    const fab = document.getElementById('diceFab');
+    const tray = document.getElementById('diceTray');
+    fab.addEventListener('click', ()=> tray.classList.toggle('open'));
+    document.addEventListener('click', (e)=>{
+      if(!tray.contains(e.target) && e.target!==fab && tray.classList.contains('open') && !fab.contains(e.target)){
+        // keep open only if clicking fully outside both
+      }
+    });
+    function doRoll(expr){
+      const r = Dice.parseAndRoll(expr);
+      if(!r){ document.getElementById('diceResult').textContent = 'Expressão inválida.'; return; }
+      document.getElementById('diceResult').innerHTML = `<b>${r.total}</b><br><span style="font-size:.78rem;">${r.detail}</span>`;
+      const mini = document.getElementById('diceHistoryMini');
+      const line = document.createElement('div');
+      line.textContent = `${expr} = ${r.total}`;
+      mini.prepend(line);
+      Hist.add(CURRENT, 'Rolagem de Dados', `${expr} = ${r.total}`, r.detail);
+      markDirty();
+    }
+    tray.querySelectorAll('[data-die]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const d = btn.dataset.die;
+        if(d==='20adv') doRoll('2d20kh1');
+        else doRoll('1d'+d);
+      });
+    });
+    document.getElementById('btnRollCustom').addEventListener('click', ()=>{
+      const expr = document.getElementById('customDiceExpr').value.trim();
+      if(expr) doRoll(expr);
+    });
+    document.getElementById('customDiceExpr').addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ document.getElementById('btnRollCustom').click(); }
+    });
+  }
+
+  function initTopbarButtons(){
+    document.getElementById('btnSwitchChar').addEventListener('click', openCharManager);
+    document.getElementById('btnExportJson').addEventListener('click', exportJson);
+    document.getElementById('btnImportJson').addEventListener('click', ()=>document.getElementById('importFileInput').click());
+    document.getElementById('importFileInput').addEventListener('change', (e)=>{
+      if(e.target.files[0]) importJson(e.target.files[0]);
+      e.target.value = '';
+    });
+    document.getElementById('btnExportPdf').addEventListener('click', ()=>PDF.exportPdf());
+    document.getElementById('btnGotoConfig').addEventListener('click', ()=>UI.setTab('config'));
+  }
+
+  function init(){
+    ensureCharacter();
+    initTopbarButtons();
+    initDiceTray();
+    UI.render();
+  }
+
+  return {init, newCharacter, switchTo, duplicateCurrent, deleteCurrent, deleteCharacter, openCharManager, promptNewCharacter, exportJson, importJson};
+})();
+
+document.addEventListener('DOMContentLoaded', App.init);
+</script>
+</body>
+</html>
